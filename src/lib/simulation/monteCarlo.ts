@@ -1,0 +1,116 @@
+import type {
+  Assets,
+  AnnualPlan,
+  RegimeSettings,
+  WithdrawalPriority,
+  TrialResult,
+  TrialYearResult,
+} from '@/types'
+import {
+  createInitialRegimeState,
+  determineNextRegime,
+  getStockReturn,
+  isCrashRegime,
+  type RegimeState,
+} from './regime'
+import {
+  type AssetBalances,
+  processNetIncome,
+  calculateTotalAssets,
+  isDepleted,
+} from './withdrawal'
+
+interface SimulationParams {
+  initialAssets: Assets
+  annualPlans: AnnualPlan[]
+  regimeSettings: RegimeSettings
+  withdrawalPriority: WithdrawalPriority
+}
+
+/**
+ * 1回のシミュレーション試行を実行
+ */
+export function runSingleTrial(params: SimulationParams): TrialResult {
+  const { initialAssets, annualPlans, regimeSettings, withdrawalPriority } = params
+
+  // 初期状態
+  let balances: AssetBalances = {
+    stocks: initialAssets.stocks,
+    bonds: initialAssets.bonds,
+    cash: initialAssets.cash,
+  }
+  let regimeState: RegimeState = createInitialRegimeState()
+  let depletionYear: number | null = null
+  let crashCount = 0
+  const yearlyResults: TrialYearResult[] = []
+
+  for (const plan of annualPlans) {
+    // 1. レジーム遷移の判定（年初）
+    const previousRegime = regimeState.current
+    regimeState = determineNextRegime(regimeState, regimeSettings)
+
+    // 暴落カウント
+    if (regimeState.current === 'crash' && previousRegime !== 'crash') {
+      crashCount++
+    }
+
+    // 2. 資産の成長
+    const stockReturn = getStockReturn(regimeState.current, regimeSettings)
+    balances.stocks *= 1 + stockReturn
+    balances.bonds *= 1 + regimeSettings.bondReturn / 100
+    balances.cash *= 1 + regimeSettings.cashReturn / 100
+
+    // 3. 収支の計算
+    const netIncome = plan.income - plan.basicExpense - plan.extraExpense
+
+    // 4. 取崩し/積立
+    const isCrash = isCrashRegime(regimeState.current, regimeSettings)
+    const result = processNetIncome(netIncome, balances, withdrawalPriority, isCrash)
+    balances = result.balances
+
+    // 5. 枯渇判定
+    const totalAssets = calculateTotalAssets(balances)
+    const depleted = isDepleted(balances)
+
+    if (depleted && depletionYear === null) {
+      depletionYear = plan.year
+    }
+
+    // 年次結果を記録
+    yearlyResults.push({
+      year: plan.year,
+      age: plan.age,
+      regime: regimeState.current,
+      stocksBalance: Math.max(0, balances.stocks),
+      bondsBalance: Math.max(0, balances.bonds),
+      cashBalance: Math.max(0, balances.cash),
+      totalAssets: Math.max(0, totalAssets),
+      income: plan.income,
+      basicExpense: plan.basicExpense,
+      extraExpense: plan.extraExpense,
+      isDepleted: depleted,
+    })
+  }
+
+  return {
+    yearlyResults,
+    depletionYear,
+    crashCount,
+  }
+}
+
+/**
+ * モンテカルロシミュレーションを実行（複数試行）
+ */
+export function runMonteCarloSimulation(
+  params: SimulationParams,
+  numTrials: number = 1000
+): TrialResult[] {
+  const results: TrialResult[] = []
+
+  for (let i = 0; i < numTrials; i++) {
+    results.push(runSingleTrial(params))
+  }
+
+  return results
+}
