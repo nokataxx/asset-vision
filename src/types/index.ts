@@ -3,6 +3,8 @@ export interface Assets {
   stocks: number // 株式（万円）
   bonds: number // 国債（万円）
   cash: number // 現金（万円）
+  cashLimit: number // 現金上限（万円）
+  bondsLimit: number // 国債上限（万円）
   age: number // 年齢
 }
 
@@ -114,13 +116,13 @@ export interface AppState {
 // デフォルト値
 export const DEFAULT_REGIME_SETTINGS: RegimeSettings = {
   normalReturn: 7,
-  normalStdDev: 10,
-  crashReturn: -25,
-  crashStdDev: 15,
-  recoveryReturn: 12,
-  recoveryStdDev: 12,
-  crashProbability: 7,
-  recoveryYears: 4,
+  normalStdDev: 15,
+  crashReturn: -35,
+  crashStdDev: 20,
+  recoveryReturn: 20,
+  recoveryStdDev: 18,
+  crashProbability: 10,
+  recoveryYears: 3,
   bondReturn: 1.2,
   cashReturn: 0,
 }
@@ -146,5 +148,7 @@ export const DEFAULT_ASSETS: Assets = {
   stocks: 0,
   bonds: 0,
   cash: 0,
+  cashLimit: 500,
+  bondsLimit: 1000,
   age: 30,
 }

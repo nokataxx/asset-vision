@@ -40,6 +40,10 @@ See `doc/requirements.md` for full specification. Key concepts:
 - **Withdrawal priority**: Configurable order for normal vs crash periods
 - **Scenarios**: Multiple parameter sets for comparison simulations
 
+## Git
+
+- Commit messages should be written in English
+
 ## TypeScript
 
 Strict mode enabled. Key settings in `tsconfig.app.json`:

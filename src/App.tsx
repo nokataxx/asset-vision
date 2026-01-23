@@ -182,11 +182,13 @@ function App() {
             </div>
           </div>
 
-          {/* 1段目: 現在の資産とレジーム設定 */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <AssetsInput assets={assets} onChange={handleAssetsChange} />
-
+          {/* 1段目: 現在の資産とレジーム設定 (4:6) */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="md:col-span-2">
+              <AssetsInput assets={assets} onChange={handleAssetsChange} />
+            </div>
+
+            <div className="md:col-span-3">
               <RegimeSettingsInput
                 settings={regimeSettings}
                 onChange={setRegimeSettings}
@@ -194,16 +196,18 @@ function App() {
             </div>
           </div>
 
-          {/* 2段目: 収支計画と年次収支テーブル */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <IncomeExpenseSettings
-              plan={incomeExpensePlan}
-              onChange={handleIncomeExpensePlanChange}
-              age={assets.age}
-              onAgeChange={(age) => handleAssetsChange({ ...assets, age })}
-            />
-
+          {/* 2段目: 収支計画と年次収支テーブル (4:6) */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="md:col-span-2">
+              <IncomeExpenseSettings
+                plan={incomeExpensePlan}
+                onChange={handleIncomeExpensePlanChange}
+                age={assets.age}
+                onAgeChange={(age) => handleAssetsChange({ ...assets, age })}
+              />
+            </div>
+
+            <div className="md:col-span-3">
               <AnnualPlanTable
                 plans={annualPlans}
                 onChange={setAnnualPlans}

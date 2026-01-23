@@ -55,10 +55,36 @@ export function runSingleTrial(params: SimulationParams): TrialResult {
     }
 
     // 2. 資産の成長
-    const stockReturn = getStockReturn(regimeState.current, regimeSettings)
-    balances.stocks *= 1 + stockReturn
+    // 国債と現金は通常通りリターンを適用
     balances.bonds *= 1 + regimeSettings.bondReturn / 100
     balances.cash *= 1 + regimeSettings.cashReturn / 100
+
+    // 株式のリターンを計算
+    const stockReturn = getStockReturn(regimeState.current, regimeSettings)
+    const stockGain = balances.stocks * stockReturn
+
+    // 株式の利益を現金→国債→株式の優先順位で配分
+    if (stockGain > 0) {
+      let remainingGain = stockGain
+
+      // 1. 現金を上限まで補充
+      const cashRoom = Math.max(0, initialAssets.cashLimit - balances.cash)
+      const toCash = Math.min(remainingGain, cashRoom)
+      balances.cash += toCash
+      remainingGain -= toCash
+
+      // 2. 国債を上限まで補充
+      const bondsRoom = Math.max(0, initialAssets.bondsLimit - balances.bonds)
+      const toBonds = Math.min(remainingGain, bondsRoom)
+      balances.bonds += toBonds
+      remainingGain -= toBonds
+
+      // 3. 残りは株式に加算
+      balances.stocks += remainingGain
+    } else {
+      // 損失の場合は株式から減算
+      balances.stocks += stockGain
+    }
 
     // 3. 収支の計算
     const netIncome = plan.income - plan.basicExpense - plan.extraExpense

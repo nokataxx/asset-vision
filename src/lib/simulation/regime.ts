@@ -13,7 +13,11 @@ export interface RegimeState {
  */
 function randomNormal(mean: number, stdDev: number): number {
   // Box-Muller変換
-  const u1 = Math.random()
+  // u1が0だとlog(0)=-Infinityになるため、0を回避
+  let u1: number
+  do {
+    u1 = Math.random()
+  } while (u1 === 0)
   const u2 = Math.random()
   const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
   return mean + stdDev * z

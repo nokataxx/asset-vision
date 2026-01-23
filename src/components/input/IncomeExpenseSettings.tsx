@@ -16,7 +16,7 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
   }
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>収支計画</CardTitle>
       </CardHeader>

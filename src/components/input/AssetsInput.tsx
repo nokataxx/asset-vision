@@ -12,7 +12,7 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
   const totalAssets = assets.stocks + assets.bonds + assets.cash
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>現在の資産</CardTitle>
       </CardHeader>
@@ -32,31 +32,59 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
         </div>
 
         {/* 国債 */}
-        <div className="space-y-2">
-          <Label htmlFor="bonds">国債（万円）</Label>
-          <Input
-            id="bonds"
-            type="number"
-            value={assets.bonds || ''}
-            onChange={(e) =>
-              onChange({ ...assets, bonds: parseFloat(e.target.value) || 0 })
-            }
-            placeholder="0"
-          />
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-2">
+            <Label htmlFor="bonds">国債（万円）</Label>
+            <Input
+              id="bonds"
+              type="number"
+              value={assets.bonds || ''}
+              onChange={(e) =>
+                onChange({ ...assets, bonds: parseFloat(e.target.value) || 0 })
+              }
+              placeholder="0"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="bondsLimit">積立上限（万円）</Label>
+            <Input
+              id="bondsLimit"
+              type="number"
+              value={assets.bondsLimit || ''}
+              onChange={(e) =>
+                onChange({ ...assets, bondsLimit: parseFloat(e.target.value) || 0 })
+              }
+              placeholder="1000"
+            />
+          </div>
         </div>
 
         {/* 現金 */}
-        <div className="space-y-2">
-          <Label htmlFor="cash">現金（万円）</Label>
-          <Input
-            id="cash"
-            type="number"
-            value={assets.cash || ''}
-            onChange={(e) =>
-              onChange({ ...assets, cash: parseFloat(e.target.value) || 0 })
-            }
-            placeholder="0"
-          />
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-2">
+            <Label htmlFor="cash">現金（万円）</Label>
+            <Input
+              id="cash"
+              type="number"
+              value={assets.cash || ''}
+              onChange={(e) =>
+                onChange({ ...assets, cash: parseFloat(e.target.value) || 0 })
+              }
+              placeholder="0"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="cashLimit">積立上限（万円）</Label>
+            <Input
+              id="cashLimit"
+              type="number"
+              value={assets.cashLimit || ''}
+              onChange={(e) =>
+                onChange({ ...assets, cashLimit: parseFloat(e.target.value) || 0 })
+              }
+              placeholder="500"
+            />
+          </div>
         </div>
 
         {/* 資産合計 */}

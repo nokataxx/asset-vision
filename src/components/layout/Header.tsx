@@ -24,7 +24,7 @@ export function Header() {
     <header className="border-b bg-background">
       <div className="container mx-auto px-4 h-14 flex items-center justify-between">
         <h1 className="text-lg font-semibold">
-          金融資産シミュレーター
+          Financial Asset Simulator
         </h1>
 
         <div className="flex items-center gap-2">

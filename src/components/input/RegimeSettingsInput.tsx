@@ -1,7 +1,9 @@
-import type { RegimeSettings } from '@/types'
+import { DEFAULT_REGIME_SETTINGS, type RegimeSettings } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { RotateCcw } from 'lucide-react'
 
 interface RegimeSettingsInputProps {
   settings: RegimeSettings
@@ -14,9 +16,17 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="h-full">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle>レジーム設定</CardTitle>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onChange(DEFAULT_REGIME_SETTINGS)}
+        >
+          <RotateCcw className="h-4 w-4 mr-1" />
+          初期値
+        </Button>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -166,12 +176,12 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
 
           {/* 右側: その他資産のリターン (1/3) */}
           <div className="space-y-4 md:border-l md:pl-6 md:col-span-1">
-            <Label className="text-base font-medium">その他資産のリターン</Label>
+            <Label className="text-base font-medium">その他資産</Label>
 
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="bondReturn" className="text-sm">
-                  国債リターン（%）
+                  国債利回り（%）
                 </Label>
                 <Input
                   id="bondReturn"
@@ -187,7 +197,7 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
 
               <div className="space-y-2">
                 <Label htmlFor="cashReturn" className="text-sm">
-                  現金リターン（%）
+                  現金利回り（%）
                 </Label>
                 <Input
                   id="cashReturn"

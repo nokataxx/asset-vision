@@ -26,7 +26,7 @@ export function AnnualPlanTable({
   }
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle className="text-base">年次収支テーブル</CardTitle>
         <Button variant="outline" size="sm" onClick={onRegenerate}>
