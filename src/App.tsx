@@ -158,16 +158,7 @@ function App() {
         <>
           {/* 保存状態インジケーターとリセットボタン */}
           <div className="flex items-center justify-between mb-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleResetSettings}
-              className="text-xs h-7 px-2 text-muted-foreground hover:text-destructive"
-            >
-              <RotateCcw className="h-3 w-3 mr-1" />
-              設定をリセット
-            </Button>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground ms-3">
               {isAuthenticated ? (
                 <>
                   <Cloud className="h-3 w-3" />
@@ -180,6 +171,15 @@ function App() {
                 </>
               )}
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleResetSettings}
+              className="text-xs h-7 px-2 text-muted-foreground hover:text-destructive"
+            >
+              <RotateCcw className="h-3 w-3 mr-1" />
+              設定をリセット
+            </Button>
           </div>
 
           {/* 1段目: 現在の資産とレジーム設定 (4:6) */}
@@ -212,6 +212,8 @@ function App() {
                 plans={annualPlans}
                 onChange={setAnnualPlans}
                 onRegenerate={handleRegenerateAnnualPlans}
+                incomeGrowthRate={incomeExpensePlan.incomeGrowthRate}
+                expenseGrowthRate={incomeExpensePlan.expenseGrowthRate}
               />
             </div>
           </div>

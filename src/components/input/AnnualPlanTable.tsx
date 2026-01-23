@@ -8,12 +8,16 @@ interface AnnualPlanTableProps {
   plans: AnnualPlan[]
   onChange: (plans: AnnualPlan[]) => void
   onRegenerate: () => void
+  incomeGrowthRate: number
+  expenseGrowthRate: number
 }
 
 export function AnnualPlanTable({
   plans,
   onChange,
   onRegenerate,
+  incomeGrowthRate,
+  expenseGrowthRate,
 }: AnnualPlanTableProps) {
   const handleCellChange = (
     index: number,
@@ -22,6 +26,36 @@ export function AnnualPlanTable({
   ) => {
     const newPlans = [...plans]
     newPlans[index] = { ...newPlans[index], [field]: value }
+    onChange(newPlans)
+  }
+
+  // 収入を変更したら、それ以降の年に成長率を適用
+  const handleIncomeChange = (index: number, value: number) => {
+    const newPlans = [...plans]
+    newPlans[index] = { ...newPlans[index], income: value }
+
+    // 以降の年に成長率を適用
+    for (let i = index + 1; i < newPlans.length; i++) {
+      const prevIncome = newPlans[i - 1].income
+      const newIncome = prevIncome * (1 + incomeGrowthRate / 100)
+      newPlans[i] = { ...newPlans[i], income: Math.round(newIncome * 10) / 10 }
+    }
+
+    onChange(newPlans)
+  }
+
+  // 生活費を変更したら、それ以降の年に成長率を適用
+  const handleExpenseChange = (index: number, value: number) => {
+    const newPlans = [...plans]
+    newPlans[index] = { ...newPlans[index], basicExpense: value }
+
+    // 以降の年に成長率を適用
+    for (let i = index + 1; i < newPlans.length; i++) {
+      const prevExpense = newPlans[i - 1].basicExpense
+      const newExpense = prevExpense * (1 + expenseGrowthRate / 100)
+      newPlans[i] = { ...newPlans[i], basicExpense: Math.round(newExpense * 10) / 10 }
+    }
+
     onChange(newPlans)
   }
 
@@ -70,17 +104,13 @@ export function AnnualPlanTable({
                             className="h-8 w-20"
                             value={plan.income || ''}
                             onChange={(e) =>
-                              handleCellChange(
-                                index,
-                                'income',
-                                parseFloat(e.target.value) || 0
-                              )
+                              handleIncomeChange(index, parseFloat(e.target.value) || 0)
                             }
                           />
                           <button
                             type="button"
                             className="p-1 text-muted-foreground hover:text-foreground"
-                            onClick={() => handleCellChange(index, 'income', 0)}
+                            onClick={() => handleIncomeChange(index, 0)}
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -93,17 +123,13 @@ export function AnnualPlanTable({
                             className="h-8 w-20"
                             value={plan.basicExpense || ''}
                             onChange={(e) =>
-                              handleCellChange(
-                                index,
-                                'basicExpense',
-                                parseFloat(e.target.value) || 0
-                              )
+                              handleExpenseChange(index, parseFloat(e.target.value) || 0)
                             }
                           />
                           <button
                             type="button"
                             className="p-1 text-muted-foreground hover:text-foreground"
-                            onClick={() => handleCellChange(index, 'basicExpense', 0)}
+                            onClick={() => handleExpenseChange(index, 0)}
                           >
                             <X className="h-3 w-3" />
                           </button>

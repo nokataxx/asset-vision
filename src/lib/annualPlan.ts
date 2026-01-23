@@ -10,16 +10,12 @@ export function generateAnnualPlans(
   for (let i = 0; i < basePlan.duration; i++) {
     const year = basePlan.startYear + i
     const age = currentAge + i
-    const income =
-      basePlan.initialIncome * Math.pow(1 + basePlan.incomeGrowthRate / 100, i)
-    const basicExpense =
-      basePlan.initialExpense * Math.pow(1 + basePlan.expenseGrowthRate / 100, i)
 
     plans.push({
       year,
       age,
-      income: Math.round(income * 10) / 10,
-      basicExpense: Math.round(basicExpense * 10) / 10,
+      income: 0,
+      basicExpense: 0,
       extraExpense: 0,
     })
   }

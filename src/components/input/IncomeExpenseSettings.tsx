@@ -66,20 +66,6 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          {/* 初期収入 */}
-          <div className="space-y-2">
-            <Label htmlFor="initialIncome">収入（万円/年）</Label>
-            <Input
-              id="initialIncome"
-              type="number"
-              value={plan.initialIncome || ''}
-              onChange={(e) =>
-                handleChange('initialIncome', parseFloat(e.target.value) || 0)
-              }
-              placeholder="0"
-            />
-          </div>
-
           {/* 収入成長率 */}
           <div className="space-y-2">
             <Label htmlFor="incomeGrowthRate">収入成長率（%）</Label>
@@ -90,22 +76,6 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
               value={plan.incomeGrowthRate || ''}
               onChange={(e) =>
                 handleChange('incomeGrowthRate', parseFloat(e.target.value) || 0)
-              }
-              placeholder="0"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          {/* 初期基本生活費 */}
-          <div className="space-y-2">
-            <Label htmlFor="initialExpense">生活費（万円/年）</Label>
-            <Input
-              id="initialExpense"
-              type="number"
-              value={plan.initialExpense || ''}
-              onChange={(e) =>
-                handleChange('initialExpense', parseFloat(e.target.value) || 0)
               }
               placeholder="0"
             />

@@ -35,20 +35,20 @@ export function YearlyResultTable({ yearlyResults }: YearlyResultTableProps) {
         <CardTitle>年次結果テーブル</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="max-h-80 overflow-y-auto">
+        <div>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="sticky top-0 bg-background w-16">年</TableHead>
-                <TableHead className="sticky top-0 bg-background w-16">年齢</TableHead>
-                <TableHead className="sticky top-0 bg-background text-right">収入</TableHead>
-                <TableHead className="sticky top-0 bg-background text-right">支出①</TableHead>
-                <TableHead className="sticky top-0 bg-background text-right">支出②</TableHead>
-                <TableHead className="sticky top-0 bg-background text-right">資産(5%)</TableHead>
-                <TableHead className="sticky top-0 bg-background text-right">資産(10%)</TableHead>
-                <TableHead className="sticky top-0 bg-background text-right">資産(25%)</TableHead>
-                <TableHead className="sticky top-0 bg-background text-right">資産(50%)</TableHead>
-                <TableHead className="sticky top-0 bg-background text-right">資産(95%)</TableHead>
+                <TableHead className="w-16">年</TableHead>
+                <TableHead className="w-16">年齢</TableHead>
+                <TableHead className="text-right">収入</TableHead>
+                <TableHead className="text-right">支出①</TableHead>
+                <TableHead className="text-right">支出②</TableHead>
+                <TableHead className="text-right">資産(5%)</TableHead>
+                <TableHead className="text-right">資産(10%)</TableHead>
+                <TableHead className="text-right">資産(25%)</TableHead>
+                <TableHead className="text-right">資産(50%)</TableHead>
+                <TableHead className="text-right">資産(95%)</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

@@ -12,9 +12,7 @@ export interface Assets {
 export interface IncomeExpensePlan {
   startYear: number // 開始年
   duration: number // シミュレーション期間（年）
-  initialIncome: number // 初期収入（万円）
   incomeGrowthRate: number // 収入成長率（%）
-  initialExpense: number // 初期基本生活費（万円）
   expenseGrowthRate: number // 基本生活費成長率（%）
 }
 
@@ -142,9 +140,7 @@ export const DEFAULT_WITHDRAWAL_PRIORITY: WithdrawalPriority = {
 export const DEFAULT_INCOME_EXPENSE_PLAN: IncomeExpensePlan = {
   startYear: new Date().getFullYear(),
   duration: 30,
-  initialIncome: 0,
   incomeGrowthRate: 0,
-  initialExpense: 0,
   expenseGrowthRate: 0,
 }
 
