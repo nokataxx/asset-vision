@@ -80,6 +80,8 @@ export function aggregateYearlyResults(
       basicExpense: plan.basicExpense,
       extraExpense: plan.extraExpense,
       assets5th: Math.round(calculatePercentile(yearAssets, 5)),
+      assets10th: Math.round(calculatePercentile(yearAssets, 10)),
+      assets25th: Math.round(calculatePercentile(yearAssets, 25)),
       assets50th: Math.round(calculatePercentile(yearAssets, 50)),
       assets95th: Math.round(calculatePercentile(yearAssets, 95)),
     })
@@ -106,6 +108,8 @@ export function calculateSummaryMetrics(
     medianDepletionYear: calculateMedianDepletionYear(trialResults),
     finalAssets50th: Math.round(calculatePercentile(finalAssets, 50)),
     finalAssets5th: Math.round(calculatePercentile(finalAssets, 5)),
+    finalAssets10th: Math.round(calculatePercentile(finalAssets, 10)),
+    finalAssets25th: Math.round(calculatePercentile(finalAssets, 25)),
     finalAssets95th: Math.round(calculatePercentile(finalAssets, 95)),
     averageCrashCount: Math.round(calculateAverageCrashCount(trialResults) * 10) / 10,
   }

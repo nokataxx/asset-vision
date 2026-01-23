@@ -68,6 +68,8 @@ export function AssetChart({ yearlyResults }: AssetChartProps) {
     age: r.age,
     median: r.assets50th,
     lower: r.assets5th,
+    p10: r.assets10th,
+    p25: r.assets25th,
     upper: r.assets95th,
     // スタック用（Tooltipには表示しない）
     _stackBase: r.assets5th,
@@ -161,10 +163,13 @@ export function AssetChart({ yearlyResults }: AssetChartProps) {
                   // 非表示のラインはTooltipにも表示しない
                   if (String(name) === 'upper' && !showUpper) return null
                   if (String(name) === 'lower' && !showLower) return null
+                  if ((String(name) === 'p10' || String(name) === 'p25') && !showLower) return null
                   const labels: Record<string, string> = {
-                    median: '中央値',
-                    lower: '5%タイル',
-                    upper: '95%タイル',
+                    median: '50%',
+                    lower: '5%',
+                    p10: '10%',
+                    p25: '25%',
+                    upper: '95%',
                   }
                   return [formatTooltip(value), labels[String(name)] || String(name)]
                 }}
@@ -216,7 +221,31 @@ export function AssetChart({ yearlyResults }: AssetChartProps) {
                 <Line
                   type="monotone"
                   dataKey="lower"
-                  stroke="#6b7280"
+                  stroke="#ef4444"
+                  strokeWidth={1}
+                  strokeDasharray="3 3"
+                  dot={false}
+                />
+              )}
+
+              {/* 10%タイルライン */}
+              {showLower && (
+                <Line
+                  type="monotone"
+                  dataKey="p10"
+                  stroke="#f97316"
+                  strokeWidth={1}
+                  strokeDasharray="3 3"
+                  dot={false}
+                />
+              )}
+
+              {/* 25%タイルライン */}
+              {showLower && (
+                <Line
+                  type="monotone"
+                  dataKey="p25"
+                  stroke="#eab308"
                   strokeWidth={1}
                   strokeDasharray="3 3"
                   dot={false}
@@ -241,21 +270,37 @@ export function AssetChart({ yearlyResults }: AssetChartProps) {
             </div>
           )}
         </div>
-        <div className="flex justify-center gap-6 mt-4 text-xs text-muted-foreground">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap justify-center gap-4 mt-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1">
             <div className="w-4 h-0.5 bg-blue-600" />
-            <span>中央値</span>
+            <span>50%</span>
           </div>
           {showLower && (
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-0.5 bg-gray-500 border-dashed" style={{ borderTopWidth: 1, borderTopStyle: 'dashed' }} />
-              <span>{showUpper ? '5%/95%タイル' : '5%タイル'}</span>
+            <>
+              <div className="flex items-center gap-1">
+                <div className="w-4 h-0.5 bg-red-500" style={{ borderTopWidth: 1, borderTopStyle: 'dashed' }} />
+                <span>5%</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-4 h-0.5 bg-orange-500" style={{ borderTopWidth: 1, borderTopStyle: 'dashed' }} />
+                <span>10%</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-4 h-0.5 bg-yellow-500" style={{ borderTopWidth: 1, borderTopStyle: 'dashed' }} />
+                <span>25%</span>
+              </div>
+            </>
+          )}
+          {showUpper && (
+            <div className="flex items-center gap-1">
+              <div className="w-4 h-0.5 bg-gray-500" style={{ borderTopWidth: 1, borderTopStyle: 'dashed' }} />
+              <span>95%</span>
             </div>
           )}
           {showConfidenceBand && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <div className="w-4 h-2 bg-blue-500/15" />
-              <span>信頼区間</span>
+              <span>5-95%範囲</span>
             </div>
           )}
         </div>

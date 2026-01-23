@@ -2,7 +2,7 @@ import type { AnnualPlan } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, X } from 'lucide-react'
 
 interface AnnualPlanTableProps {
   plans: AnnualPlan[]
@@ -64,46 +64,73 @@ export function AnnualPlanTable({
                       <td className="w-16 p-2 font-medium">{plan.year}</td>
                       <td className="w-16 p-2">{plan.age}</td>
                       <td className="w-28 p-2">
-                        <Input
-                          type="number"
-                          className="h-8 w-24"
-                          value={plan.income || ''}
-                          onChange={(e) =>
-                            handleCellChange(
-                              index,
-                              'income',
-                              parseFloat(e.target.value) || 0
-                            )
-                          }
-                        />
+                        <div className="flex items-center gap-1">
+                          <Input
+                            type="number"
+                            className="h-8 w-20"
+                            value={plan.income || ''}
+                            onChange={(e) =>
+                              handleCellChange(
+                                index,
+                                'income',
+                                parseFloat(e.target.value) || 0
+                              )
+                            }
+                          />
+                          <button
+                            type="button"
+                            className="p-1 text-muted-foreground hover:text-foreground"
+                            onClick={() => handleCellChange(index, 'income', 0)}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
                       </td>
                       <td className="w-28 p-2">
-                        <Input
-                          type="number"
-                          className="h-8 w-24"
-                          value={plan.basicExpense || ''}
-                          onChange={(e) =>
-                            handleCellChange(
-                              index,
-                              'basicExpense',
-                              parseFloat(e.target.value) || 0
-                            )
-                          }
-                        />
+                        <div className="flex items-center gap-1">
+                          <Input
+                            type="number"
+                            className="h-8 w-20"
+                            value={plan.basicExpense || ''}
+                            onChange={(e) =>
+                              handleCellChange(
+                                index,
+                                'basicExpense',
+                                parseFloat(e.target.value) || 0
+                              )
+                            }
+                          />
+                          <button
+                            type="button"
+                            className="p-1 text-muted-foreground hover:text-foreground"
+                            onClick={() => handleCellChange(index, 'basicExpense', 0)}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
                       </td>
                       <td className="w-28 p-2">
-                        <Input
-                          type="number"
-                          className="h-8 w-24"
-                          value={plan.extraExpense || ''}
-                          onChange={(e) =>
-                            handleCellChange(
-                              index,
-                              'extraExpense',
-                              parseFloat(e.target.value) || 0
-                            )
-                          }
-                        />
+                        <div className="flex items-center gap-1">
+                          <Input
+                            type="number"
+                            className="h-8 w-20"
+                            value={plan.extraExpense || ''}
+                            onChange={(e) =>
+                              handleCellChange(
+                                index,
+                                'extraExpense',
+                                parseFloat(e.target.value) || 0
+                              )
+                            }
+                          />
+                          <button
+                            type="button"
+                            className="p-1 text-muted-foreground hover:text-foreground"
+                            onClick={() => handleCellChange(index, 'extraExpense', 0)}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

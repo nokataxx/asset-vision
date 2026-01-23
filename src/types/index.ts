@@ -83,6 +83,8 @@ export interface YearlyResult {
   basicExpense: number
   extraExpense: number
   assets5th: number // 5%タイル
+  assets10th: number // 10%タイル
+  assets25th: number // 25%タイル
   assets50th: number // 中央値
   assets95th: number // 95%タイル
 }
@@ -93,6 +95,8 @@ export interface SummaryMetrics {
   medianDepletionYear: number | null // 枯渇年の中央値
   finalAssets50th: number // 期末資産（中央値）
   finalAssets5th: number // 期末資産（5%タイル）
+  finalAssets10th: number // 期末資産（10%タイル）
+  finalAssets25th: number // 期末資産（25%タイル）
   finalAssets95th: number // 期末資産（95%タイル）
   averageCrashCount: number // 暴落発生回数（平均）
 }

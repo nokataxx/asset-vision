@@ -45,7 +45,9 @@ export function YearlyResultTable({ yearlyResults }: YearlyResultTableProps) {
                 <TableHead className="sticky top-0 bg-background text-right">支出①</TableHead>
                 <TableHead className="sticky top-0 bg-background text-right">支出②</TableHead>
                 <TableHead className="sticky top-0 bg-background text-right">資産(5%)</TableHead>
-                <TableHead className="sticky top-0 bg-background text-right">資産(中央値)</TableHead>
+                <TableHead className="sticky top-0 bg-background text-right">資産(10%)</TableHead>
+                <TableHead className="sticky top-0 bg-background text-right">資産(25%)</TableHead>
+                <TableHead className="sticky top-0 bg-background text-right">資産(50%)</TableHead>
                 <TableHead className="sticky top-0 bg-background text-right">資産(95%)</TableHead>
               </TableRow>
             </TableHeader>
@@ -69,6 +71,20 @@ export function YearlyResultTable({ yearlyResults }: YearlyResultTableProps) {
                     }`}
                   >
                     {result.assets5th.toLocaleString()}
+                  </TableCell>
+                  <TableCell
+                    className={`text-right ${
+                      result.assets10th <= 0 ? 'text-destructive' : ''
+                    }`}
+                  >
+                    {result.assets10th.toLocaleString()}
+                  </TableCell>
+                  <TableCell
+                    className={`text-right ${
+                      result.assets25th <= 0 ? 'text-destructive' : ''
+                    }`}
+                  >
+                    {result.assets25th.toLocaleString()}
                   </TableCell>
                   <TableCell className="text-right font-medium">
                     {result.assets50th.toLocaleString()}

@@ -35,17 +35,27 @@ export function SummaryMetrics({ metrics }: SummaryMetricsProps) {
       highlight: false,
     },
     {
-      label: '期末資産（中央値）',
+      label: '期末資産（50%）',
       value: `${metrics.finalAssets50th.toLocaleString()}万円`,
       highlight: false,
     },
     {
-      label: '期末資産（5%タイル）',
+      label: '期末資産（5%）',
       value: `${metrics.finalAssets5th.toLocaleString()}万円`,
       highlight: metrics.finalAssets5th <= 0,
     },
     {
-      label: '期末資産（95%タイル）',
+      label: '期末資産（10%）',
+      value: `${metrics.finalAssets10th.toLocaleString()}万円`,
+      highlight: metrics.finalAssets10th <= 0,
+    },
+    {
+      label: '期末資産（25%）',
+      value: `${metrics.finalAssets25th.toLocaleString()}万円`,
+      highlight: metrics.finalAssets25th <= 0,
+    },
+    {
+      label: '期末資産（95%）',
       value: `${metrics.finalAssets95th.toLocaleString()}万円`,
       highlight: false,
     },
