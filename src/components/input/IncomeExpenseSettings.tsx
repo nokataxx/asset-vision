@@ -21,7 +21,7 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
         <CardTitle>収支計画</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           {/* 現在の年齢 */}
           <div className="space-y-2">
             <Label htmlFor="age">現在の年齢（歳）</Label>
@@ -32,8 +32,10 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
               onChange={(e) => onAgeChange(parseInt(e.target.value) || 0)}
               placeholder="30"
             />
-          </div>
+          </div>  
+        </div>
 
+        <div className="grid grid-cols-2 gap-4">
           {/* 開始年 */}
           <div className="space-y-2">
             <Label htmlFor="startYear">開始年</Label>
@@ -66,7 +68,7 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
         <div className="grid grid-cols-2 gap-4">
           {/* 初期収入 */}
           <div className="space-y-2">
-            <Label htmlFor="initialIncome">初期収入（万円/年）</Label>
+            <Label htmlFor="initialIncome">収入（万円/年）</Label>
             <Input
               id="initialIncome"
               type="number"
@@ -97,7 +99,7 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
         <div className="grid grid-cols-2 gap-4">
           {/* 初期基本生活費 */}
           <div className="space-y-2">
-            <Label htmlFor="initialExpense">初期基本生活費（万円/年）</Label>
+            <Label htmlFor="initialExpense">生活費（万円/年）</Label>
             <Input
               id="initialExpense"
               type="number"
@@ -111,7 +113,7 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
 
           {/* 基本生活費成長率 */}
           <div className="space-y-2">
-            <Label htmlFor="expenseGrowthRate">基本生活費成長率（%）</Label>
+            <Label htmlFor="expenseGrowthRate">生活費成長率（%）</Label>
             <Input
               id="expenseGrowthRate"
               type="number"
@@ -120,7 +122,7 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
               onChange={(e) =>
                 handleChange('expenseGrowthRate', parseFloat(e.target.value) || 0)
               }
-              placeholder="1"
+              placeholder="0"
             />
           </div>
         </div>

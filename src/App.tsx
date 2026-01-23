@@ -2,7 +2,8 @@ import { useState, useCallback, useMemo } from 'react'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { AssetsInput } from '@/components/input/AssetsInput'
 import { IncomeExpenseSettings } from '@/components/input/IncomeExpenseSettings'
-import { AnnualPlanTable, generateAnnualPlans } from '@/components/input/AnnualPlanTable'
+import { AnnualPlanTable } from '@/components/input/AnnualPlanTable'
+import { generateAnnualPlans } from '@/lib/annualPlan'
 import { RegimeSettingsInput } from '@/components/input/RegimeSettingsInput'
 import { AssetChart } from '@/components/output/AssetChart'
 import { SummaryMetrics } from '@/components/output/SummaryMetrics'
@@ -181,28 +182,35 @@ function App() {
             </div>
           </div>
 
-          {/* 現在の資産と収支計画を横並び */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* 1段目: 現在の資産とレジーム設定 */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <AssetsInput assets={assets} onChange={handleAssetsChange} />
 
+            <div className="md:col-span-2">
+              <RegimeSettingsInput
+                settings={regimeSettings}
+                onChange={setRegimeSettings}
+              />
+            </div>
+          </div>
+
+          {/* 2段目: 収支計画と年次収支テーブル */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <IncomeExpenseSettings
               plan={incomeExpensePlan}
               onChange={handleIncomeExpensePlanChange}
               age={assets.age}
               onAgeChange={(age) => handleAssetsChange({ ...assets, age })}
             />
+
+            <div className="md:col-span-2">
+              <AnnualPlanTable
+                plans={annualPlans}
+                onChange={setAnnualPlans}
+                onRegenerate={handleRegenerateAnnualPlans}
+              />
+            </div>
           </div>
-
-          <AnnualPlanTable
-            plans={annualPlans}
-            onChange={setAnnualPlans}
-            onRegenerate={handleRegenerateAnnualPlans}
-          />
-
-          <RegimeSettingsInput
-            settings={regimeSettings}
-            onChange={setRegimeSettings}
-          />
 
           <Button
             className="w-full"

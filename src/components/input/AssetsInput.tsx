@@ -61,7 +61,7 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
 
         {/* 資産合計 */}
         <div className="pt-4 border-t">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
             <span className="font-medium">総資産</span>
             <span className="text-lg font-bold">
               {totalAssets.toLocaleString()} 万円

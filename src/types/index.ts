@@ -139,7 +139,7 @@ export const DEFAULT_INCOME_EXPENSE_PLAN: IncomeExpensePlan = {
   initialIncome: 0,
   incomeGrowthRate: 0,
   initialExpense: 0,
-  expenseGrowthRate: 1,
+  expenseGrowthRate: 0,
 }
 
 export const DEFAULT_ASSETS: Assets = {
