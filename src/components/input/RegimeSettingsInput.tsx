@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { DEFAULT_REGIME_SETTINGS, type RegimeSettings } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import { SpinInput } from '@/components/ui/spin-input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { RotateCcw } from 'lucide-react'
@@ -12,17 +12,25 @@ interface RegimeSettingsInputProps {
 }
 
 /**
- * 長期期待リターンを計算する
- * レジーム遷移の定常分布から期待値を算出
+ * 長期期待リターンを計算する（近似値）
+ * 暴落からの回復に必要な年数を計算し、定常分布から期待値を算出
  */
 function calculateExpectedReturn(settings: RegimeSettings): number {
   const p = (settings.crashProbability ?? 10) / 100 // 暴落確率（0-1）
-  const n = settings.recoveryYears ?? 2 // 戻り期年数（平均）
+  const crashReturn = (settings.crashReturn ?? -30) / 100
+  const recoveryReturn = (settings.recoveryReturn ?? 15) / 100
 
-  // 定常確率の計算
-  // π_normal = 1 / (1 + p + n*p)
-  // π_crash = p / (1 + p + n*p)
-  // π_recovery = n*p / (1 + p + n*p)
+  // 暴落からの回復に必要な平均年数を推定
+  // 暴落後の残高比率 = 1 + crashReturn (例: 0.7 for -30%)
+  // 回復に必要な年数 = log(1 / 残高比率) / log(1 + recoveryReturn)
+  const postCrashRatio = 1 + crashReturn
+  let estimatedRecoveryYears = 2 // デフォルト
+  if (postCrashRatio > 0 && postCrashRatio < 1 && recoveryReturn > 0) {
+    estimatedRecoveryYears = Math.log(1 / postCrashRatio) / Math.log(1 + recoveryReturn)
+  }
+
+  // 定常確率の計算（近似）
+  const n = estimatedRecoveryYears
   const denominator = 1 + p * (1 + n)
   const piNormal = 1 / denominator
   const piCrash = p / denominator
@@ -30,9 +38,9 @@ function calculateExpectedReturn(settings: RegimeSettings): number {
 
   // 期待リターン
   return (
-    piNormal * settings.normalReturn +
-    piCrash * settings.crashReturn +
-    piRecovery * settings.recoveryReturn
+    piNormal * (settings.normalReturn ?? 8) +
+    piCrash * (settings.crashReturn ?? -30) +
+    piRecovery * (settings.recoveryReturn ?? 15)
   )
 }
 
@@ -43,10 +51,6 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
 
   const expectedReturn = useMemo(() => calculateExpectedReturn(settings), [settings])
 
-  const handleIntChange = (field: keyof RegimeSettings, value: string) => {
-    onChange({ ...settings, [field]: parseInt(value) || 0 })
-  }
-
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -55,7 +59,7 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
           <span className="text-sm text-muted-foreground">
             長期期待リターン:{' '}
             <span className="font-medium text-foreground">
-              {expectedReturn.toFixed(1)}%
+              ≈{expectedReturn.toFixed(1)}%
             </span>
           </span>
         </div>
@@ -76,11 +80,11 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               <Label htmlFor="normalReturn" className="text-sm">
                 通常期利回り（%）
               </Label>
-              <Input
+              <SpinInput
                 id="normalReturn"
-                type="number"
                 value={settings.normalReturn || ''}
-                onChange={(e) => handleChange('normalReturn', e.target.value)}
+                onChange={(value) => handleChange('normalReturn', value)}
+                step={0.5}
                 placeholder="8"
               />
             </div>
@@ -89,11 +93,11 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               <Label htmlFor="normalStdDev" className="text-sm">
                 標準偏差（%）
               </Label>
-              <Input
+              <SpinInput
                 id="normalStdDev"
-                type="number"
                 value={settings.normalStdDev || ''}
-                onChange={(e) => handleChange('normalStdDev', e.target.value)}
+                onChange={(value) => handleChange('normalStdDev', value)}
+                step={0.5}
                 placeholder="16"
               />
             </div>
@@ -105,11 +109,11 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               <Label htmlFor="crashReturn" className="text-sm">
                 暴落期利回り（%）
               </Label>
-              <Input
+              <SpinInput
                 id="crashReturn"
-                type="number"
                 value={settings.crashReturn || ''}
-                onChange={(e) => handleChange('crashReturn', e.target.value)}
+                onChange={(value) => handleChange('crashReturn', value)}
+                step={1}
                 placeholder="-30"
               />
             </div>
@@ -118,11 +122,11 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               <Label htmlFor="crashStdDev" className="text-sm">
                 標準偏差（%）
               </Label>
-              <Input
+              <SpinInput
                 id="crashStdDev"
-                type="number"
                 value={settings.crashStdDev || ''}
-                onChange={(e) => handleChange('crashStdDev', e.target.value)}
+                onChange={(value) => handleChange('crashStdDev', value)}
+                step={0.5}
                 placeholder="20"
               />
             </div>
@@ -131,27 +135,29 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               <Label htmlFor="crashProbability" className="text-sm">
                 発生確率（%/年）
               </Label>
-              <Input
+              <SpinInput
                 id="crashProbability"
-                type="number"
                 value={settings.crashProbability || ''}
-                onChange={(e) => handleChange('crashProbability', e.target.value)}
+                onChange={(value) => handleChange('crashProbability', value)}
+                step={1}
+                min={0}
+                max={100}
                 placeholder="10"
               />
             </div>
           </div>
 
-          {/* 戻り期: 利回り、標準偏差、年数 */}
+          {/* 戻り期: 利回り、標準偏差 */}
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
               <Label htmlFor="recoveryReturn" className="text-sm">
                 戻り期利回り（%）
               </Label>
-              <Input
+              <SpinInput
                 id="recoveryReturn"
-                type="number"
                 value={settings.recoveryReturn || ''}
-                onChange={(e) => handleChange('recoveryReturn', e.target.value)}
+                onChange={(value) => handleChange('recoveryReturn', value)}
+                step={1}
                 placeholder="15"
               />
             </div>
@@ -160,25 +166,12 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               <Label htmlFor="recoveryStdDev" className="text-sm">
                 標準偏差（%）
               </Label>
-              <Input
+              <SpinInput
                 id="recoveryStdDev"
-                type="number"
                 value={settings.recoveryStdDev || ''}
-                onChange={(e) => handleChange('recoveryStdDev', e.target.value)}
+                onChange={(value) => handleChange('recoveryStdDev', value)}
+                step={0.5}
                 placeholder="18"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="recoveryYears" className="text-sm">
-                継続年数（平均）
-              </Label>
-              <Input
-                id="recoveryYears"
-                type="number"
-                value={settings.recoveryYears || ''}
-                onChange={(e) => handleIntChange('recoveryYears', e.target.value)}
-                placeholder="2"
               />
             </div>
           </div>
@@ -189,11 +182,11 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               <Label htmlFor="bondReturn" className="text-sm">
                 国債利回り（%）
               </Label>
-              <Input
+              <SpinInput
                 id="bondReturn"
-                type="number"
                 value={settings.bondReturn || ''}
-                onChange={(e) => handleChange('bondReturn', e.target.value)}
+                onChange={(value) => handleChange('bondReturn', value)}
+                step={0.1}
                 placeholder="1.2"
               />
             </div>

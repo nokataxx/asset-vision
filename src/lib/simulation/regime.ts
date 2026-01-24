@@ -2,7 +2,7 @@ import type { Regime, RegimeSettings } from '@/types'
 
 export interface RegimeState {
   current: Regime
-  recoveryYearsRemaining: number
+  precrashStocksBalance: number // 暴落前の株式残高（回復判定用）
 }
 
 /**
@@ -29,16 +29,20 @@ function randomNormal(mean: number, stdDev: number): number {
 export function createInitialRegimeState(): RegimeState {
   return {
     current: 'normal',
-    recoveryYearsRemaining: 0,
+    precrashStocksBalance: 0,
   }
 }
 
 /**
  * 次のレジームを決定し、状態を更新
+ * @param state 現在のレジーム状態
+ * @param settings レジーム設定
+ * @param currentStocksBalance 現在の株式残高（戻り期の終了判定に使用）
  */
 export function determineNextRegime(
   state: RegimeState,
-  settings: RegimeSettings
+  settings: RegimeSettings,
+  currentStocksBalance: number
 ): RegimeState {
   switch (state.current) {
     case 'normal':
@@ -46,34 +50,35 @@ export function determineNextRegime(
       if (Math.random() * 100 < settings.crashProbability) {
         return {
           current: 'crash',
-          recoveryYearsRemaining: 0,
+          precrashStocksBalance: currentStocksBalance, // 暴落前の残高を記録
         }
       }
       return state
 
     case 'crash':
-      // 暴落期 → 戻り期（翌年自動遷移、年数は平均±1年でランダム化）
-      const minYears = Math.max(1, settings.recoveryYears - 1)
-      const maxYears = settings.recoveryYears + 1
-      const recoveryYears = Math.floor(Math.random() * (maxYears - minYears + 1)) + minYears
+      // 暴落期 → 戻り期（翌年自動遷移）
       return {
         current: 'recovery',
-        recoveryYearsRemaining: recoveryYears,
+        precrashStocksBalance: state.precrashStocksBalance,
       }
 
     case 'recovery':
-      // 戻り期 → 通常期（継続年数終了後）
-      const remaining = state.recoveryYearsRemaining - 1
-      if (remaining <= 0) {
+      // 戻り期中も暴落が発生する可能性あり
+      if (Math.random() * 100 < settings.crashProbability) {
         return {
-          current: 'normal',
-          recoveryYearsRemaining: 0,
+          current: 'crash',
+          precrashStocksBalance: currentStocksBalance, // 新たな暴落前の残高を記録
         }
       }
-      return {
-        current: 'recovery',
-        recoveryYearsRemaining: remaining,
+      // 株式残高が暴落前の水準に回復したら通常期に戻る
+      if (currentStocksBalance >= state.precrashStocksBalance) {
+        return {
+          current: 'normal',
+          precrashStocksBalance: 0,
+        }
       }
+      // まだ回復していない場合は戻り期を継続
+      return state
 
     default:
       return state

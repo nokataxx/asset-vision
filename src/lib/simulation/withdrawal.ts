@@ -50,15 +50,36 @@ export function processNetIncome(
   netIncome: number,
   balances: AssetBalances,
   withdrawalPriority: WithdrawalPriority,
-  isCrash: boolean
+  isCrash: boolean,
+  limits?: { cashLimit: number; bondsLimit: number }
 ): WithdrawalResult {
   if (netIncome >= 0) {
-    // 収支がプラス → 現金に積立
+    // 収支がプラス → 現金→国債→株式の順で上限を守って積立
+    let remaining = netIncome
+    const newBalances = { ...balances }
+
+    if (limits) {
+      // 1. 現金を上限まで
+      const cashRoom = Math.max(0, limits.cashLimit - newBalances.cash)
+      const toCash = Math.min(remaining, cashRoom)
+      newBalances.cash += toCash
+      remaining -= toCash
+
+      // 2. 国債を上限まで
+      const bondsRoom = Math.max(0, limits.bondsLimit - newBalances.bonds)
+      const toBonds = Math.min(remaining, bondsRoom)
+      newBalances.bonds += toBonds
+      remaining -= toBonds
+
+      // 3. 残りは株式へ
+      newBalances.stocks += remaining
+    } else {
+      // 上限がない場合は現金に積立（後方互換性のため）
+      newBalances.cash += netIncome
+    }
+
     return {
-      balances: {
-        ...balances,
-        cash: balances.cash + netIncome,
-      },
+      balances: newBalances,
       shortfall: 0,
     }
   }

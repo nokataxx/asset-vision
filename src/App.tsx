@@ -71,19 +71,14 @@ function App() {
     setIncomeExpensePlan(data.incomeExpensePlan)
     setAnnualPlans(data.annualPlans)
 
-    // 古いデータ形式（recoveryYearsMin/Max）から新しい形式（recoveryYears）への変換
-    let migratedRegimeSettings = data.regimeSettings
-    const oldSettings = data.regimeSettings as RegimeSettings & {
+    // 古いデータ形式からの移行（recoveryYears関連のプロパティを削除）
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { recoveryYears, recoveryYearsMin, recoveryYearsMax, ...cleanSettings } = data.regimeSettings as RegimeSettings & {
+      recoveryYears?: number
       recoveryYearsMin?: number
       recoveryYearsMax?: number
     }
-    if (oldSettings.recoveryYearsMin !== undefined && oldSettings.recoveryYears === undefined) {
-      migratedRegimeSettings = {
-        ...oldSettings,
-        recoveryYears: Math.round((oldSettings.recoveryYearsMin + (oldSettings.recoveryYearsMax ?? oldSettings.recoveryYearsMin)) / 2),
-      }
-    }
-    setRegimeSettings(migratedRegimeSettings)
+    setRegimeSettings(cleanSettings as RegimeSettings)
   }, [])
 
   // データ永続化フック

@@ -47,8 +47,10 @@ export function YearlyResultTable({ yearlyResults }: YearlyResultTableProps) {
                 <TableHead className="text-right">資産(5%)</TableHead>
                 <TableHead className="text-right">資産(10%)</TableHead>
                 <TableHead className="text-right">資産(25%)</TableHead>
-                <TableHead className="text-right">資産(50%)</TableHead>
-                <TableHead className="text-right">資産(95%)</TableHead>
+                <TableHead className="text-right border-l">現金(50%)</TableHead>
+                <TableHead className="text-right">国債(50%)</TableHead>
+                <TableHead className="text-right">株式(50%)</TableHead>
+                <TableHead className="text-right">合計(50%)</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -86,11 +88,17 @@ export function YearlyResultTable({ yearlyResults }: YearlyResultTableProps) {
                   >
                     {result.assets25th.toLocaleString()}
                   </TableCell>
-                  <TableCell className="text-right font-medium">
-                    {result.assets50th.toLocaleString()}
+                  <TableCell className="text-right border-l">
+                    {result.cash50th.toLocaleString()}
                   </TableCell>
                   <TableCell className="text-right">
-                    {result.assets95th.toLocaleString()}
+                    {result.bonds50th.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {result.stocks50th.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="text-right font-medium">
+                    {result.assets50th.toLocaleString()}
                   </TableCell>
                 </TableRow>
               ))}

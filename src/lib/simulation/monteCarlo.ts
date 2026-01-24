@@ -45,9 +45,9 @@ export function runSingleTrial(params: SimulationParams): TrialResult {
   const yearlyResults: TrialYearResult[] = []
 
   for (const plan of annualPlans) {
-    // 1. レジーム遷移の判定（年初）
+    // 1. レジーム遷移の判定（年初、現在の株式残高を渡す）
     const previousRegime = regimeState.current
-    regimeState = determineNextRegime(regimeState, regimeSettings)
+    regimeState = determineNextRegime(regimeState, regimeSettings, balances.stocks)
 
     // 暴落カウント
     if (regimeState.current === 'crash' && previousRegime !== 'crash') {
@@ -55,31 +55,51 @@ export function runSingleTrial(params: SimulationParams): TrialResult {
     }
 
     // 2. 資産の成長
-    // 国債にリターンを適用（現金は0%なので変化なし）
-    balances.bonds *= 1 + regimeSettings.bondReturn / 100
+    // 国債のリターンを計算（常にプラス）
+    const bondGain = balances.bonds * (regimeSettings.bondReturn / 100)
+
+    // 国債リターンを現金→国債→株式の順で配分
+    if (bondGain > 0) {
+      let remainingBondGain = bondGain
+
+      // 1. 現金を上限まで補充
+      const cashRoomForBonds = Math.max(0, initialAssets.cashLimit - balances.cash)
+      const toCashFromBonds = Math.min(remainingBondGain, cashRoomForBonds)
+      balances.cash += toCashFromBonds
+      remainingBondGain -= toCashFromBonds
+
+      // 2. 国債を上限まで補充
+      const bondsRoomForBonds = Math.max(0, initialAssets.bondsLimit - balances.bonds)
+      const toBondsFromBonds = Math.min(remainingBondGain, bondsRoomForBonds)
+      balances.bonds += toBondsFromBonds
+      remainingBondGain -= toBondsFromBonds
+
+      // 3. 残りは株式へ
+      balances.stocks += remainingBondGain
+    }
 
     // 株式のリターンを計算
     const stockReturn = getStockReturn(regimeState.current, regimeSettings)
     const stockGain = balances.stocks * stockReturn
 
-    // 株式の利益を現金→国債→株式の優先順位で配分
+    // 株式リターンを処理
     if (stockGain > 0) {
-      let remainingGain = stockGain
+      let remainingStockGain = stockGain
 
       // 1. 現金を上限まで補充
-      const cashRoom = Math.max(0, initialAssets.cashLimit - balances.cash)
-      const toCash = Math.min(remainingGain, cashRoom)
-      balances.cash += toCash
-      remainingGain -= toCash
+      const cashRoomForStocks = Math.max(0, initialAssets.cashLimit - balances.cash)
+      const toCashFromStocks = Math.min(remainingStockGain, cashRoomForStocks)
+      balances.cash += toCashFromStocks
+      remainingStockGain -= toCashFromStocks
 
       // 2. 国債を上限まで補充
-      const bondsRoom = Math.max(0, initialAssets.bondsLimit - balances.bonds)
-      const toBonds = Math.min(remainingGain, bondsRoom)
-      balances.bonds += toBonds
-      remainingGain -= toBonds
+      const bondsRoomForStocks = Math.max(0, initialAssets.bondsLimit - balances.bonds)
+      const toBondsFromStocks = Math.min(remainingStockGain, bondsRoomForStocks)
+      balances.bonds += toBondsFromStocks
+      remainingStockGain -= toBondsFromStocks
 
       // 3. 残りは株式に加算
-      balances.stocks += remainingGain
+      balances.stocks += remainingStockGain
     } else {
       // 損失の場合は株式から減算
       balances.stocks += stockGain
@@ -90,7 +110,10 @@ export function runSingleTrial(params: SimulationParams): TrialResult {
 
     // 4. 取崩し/積立
     const isCrash = isCrashRegime(regimeState.current, regimeSettings)
-    const result = processNetIncome(netIncome, balances, withdrawalPriority, isCrash)
+    const result = processNetIncome(netIncome, balances, withdrawalPriority, isCrash, {
+      cashLimit: initialAssets.cashLimit,
+      bondsLimit: initialAssets.bondsLimit,
+    })
     balances = result.balances
 
     // 5. 枯渇判定

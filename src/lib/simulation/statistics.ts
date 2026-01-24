@@ -72,6 +72,15 @@ export function aggregateYearlyResults(
     const yearAssets = trialResults.map(
       (trial) => trial.yearlyResults[yearIndex]?.totalAssets ?? 0
     )
+    const yearStocks = trialResults.map(
+      (trial) => trial.yearlyResults[yearIndex]?.stocksBalance ?? 0
+    )
+    const yearBonds = trialResults.map(
+      (trial) => trial.yearlyResults[yearIndex]?.bondsBalance ?? 0
+    )
+    const yearCash = trialResults.map(
+      (trial) => trial.yearlyResults[yearIndex]?.cashBalance ?? 0
+    )
 
     results.push({
       year: plan.year,
@@ -83,7 +92,9 @@ export function aggregateYearlyResults(
       assets10th: Math.round(calculatePercentile(yearAssets, 10)),
       assets25th: Math.round(calculatePercentile(yearAssets, 25)),
       assets50th: Math.round(calculatePercentile(yearAssets, 50)),
-      assets95th: Math.round(calculatePercentile(yearAssets, 95)),
+      stocks50th: Math.round(calculatePercentile(yearStocks, 50)),
+      bonds50th: Math.round(calculatePercentile(yearBonds, 50)),
+      cash50th: Math.round(calculatePercentile(yearCash, 50)),
     })
   }
 

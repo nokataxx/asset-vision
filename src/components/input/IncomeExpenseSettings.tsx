@@ -1,6 +1,7 @@
 import type { IncomeExpensePlan } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { SpinInput } from '@/components/ui/spin-input'
 import { Label } from '@/components/ui/label'
 
 interface IncomeExpenseSettingsProps {
@@ -11,8 +12,12 @@ interface IncomeExpenseSettingsProps {
 }
 
 export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: IncomeExpenseSettingsProps) {
-  const handleChange = (field: keyof IncomeExpensePlan, value: number) => {
-    onChange({ ...plan, [field]: value })
+  const handleIntChange = (field: keyof IncomeExpensePlan, value: string) => {
+    onChange({ ...plan, [field]: parseInt(value) || 0 })
+  }
+
+  const handleFloatChange = (field: keyof IncomeExpensePlan, value: string) => {
+    onChange({ ...plan, [field]: parseFloat(value) || 0 })
   }
 
   return (
@@ -32,7 +37,7 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
               onChange={(e) => onAgeChange(parseInt(e.target.value) || 0)}
               placeholder="30"
             />
-          </div>  
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -43,9 +48,7 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
               id="startYear"
               type="number"
               value={plan.startYear || ''}
-              onChange={(e) =>
-                handleChange('startYear', parseInt(e.target.value) || 0)
-              }
+              onChange={(e) => handleIntChange('startYear', e.target.value)}
               placeholder={new Date().getFullYear().toString()}
             />
           </div>
@@ -57,9 +60,7 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
               id="duration"
               type="number"
               value={plan.duration || ''}
-              onChange={(e) =>
-                handleChange('duration', parseInt(e.target.value) || 0)
-              }
+              onChange={(e) => handleIntChange('duration', e.target.value)}
               placeholder="30"
             />
           </div>
@@ -69,13 +70,11 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
           {/* 収入成長率 */}
           <div className="space-y-2">
             <Label htmlFor="incomeGrowthRate">収入成長率（%）</Label>
-            <Input
+            <SpinInput
               id="incomeGrowthRate"
-              type="number"
               value={plan.incomeGrowthRate || ''}
-              onChange={(e) =>
-                handleChange('incomeGrowthRate', parseFloat(e.target.value) || 0)
-              }
+              onChange={(value) => handleFloatChange('incomeGrowthRate', value)}
+              step={0.5}
               placeholder="0"
             />
           </div>
@@ -83,13 +82,11 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
           {/* 基本生活費成長率 */}
           <div className="space-y-2">
             <Label htmlFor="expenseGrowthRate">生活費成長率（%）</Label>
-            <Input
+            <SpinInput
               id="expenseGrowthRate"
-              type="number"
               value={plan.expenseGrowthRate || ''}
-              onChange={(e) =>
-                handleChange('expenseGrowthRate', parseFloat(e.target.value) || 0)
-              }
+              onChange={(value) => handleFloatChange('expenseGrowthRate', value)}
+              step={0.5}
               placeholder="0"
             />
           </div>

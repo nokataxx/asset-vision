@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { YearlyResult } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import {
   ComposedChart,
   Line,
@@ -10,10 +9,7 @@ import {
   CartesianGrid,
   Tooltip,
   ReferenceLine,
-  Area,
 } from 'recharts'
-
-type ChartMode = 'all' | 'medianOnly' | 'medianAnd5th'
 
 interface AssetChartProps {
   yearlyResults: YearlyResult[]
@@ -22,7 +18,6 @@ interface AssetChartProps {
 export function AssetChart({ yearlyResults }: AssetChartProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = useState({ width: 0, height: 288 })
-  const [chartMode, setChartMode] = useState<ChartMode>('all')
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -61,8 +56,6 @@ export function AssetChart({ yearlyResults }: AssetChartProps) {
     )
   }
 
-  // グラフ用のデータを変換
-  // 信頼区間を正しく描画するため、スタック用の別キーを使用
   const chartData = yearlyResults.map((r) => ({
     year: r.year,
     age: r.age,
@@ -70,10 +63,6 @@ export function AssetChart({ yearlyResults }: AssetChartProps) {
     lower: r.assets5th,
     p10: r.assets10th,
     p25: r.assets25th,
-    upper: r.assets95th,
-    // スタック用（Tooltipには表示しない）
-    _stackBase: r.assets5th,
-    _stackBand: Math.max(0, r.assets95th - r.assets5th),
   }))
 
   const formatYAxis = (value: number) => {
@@ -87,53 +76,10 @@ export function AssetChart({ yearlyResults }: AssetChartProps) {
     return `${value.toLocaleString()}万円`
   }
 
-  const showUpper = chartMode === 'all'
-  const showLower = chartMode === 'all' || chartMode === 'medianAnd5th'
-  const showConfidenceBand = chartMode === 'all'
-
-  // モードに応じたY軸の最大値を計算
-  const getYAxisMax = (): number | 'auto' => {
-    if (chartMode === 'medianOnly') {
-      const maxMedian = Math.max(...chartData.map((d) => d.median))
-      return Math.ceil(maxMedian * 1.1) // 10%のマージン
-    }
-    if (chartMode === 'medianAnd5th') {
-      const maxValue = Math.max(...chartData.map((d) => Math.max(d.median, d.lower)))
-      return Math.ceil(maxValue * 1.1)
-    }
-    return 'auto'
-  }
-
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardHeader>
         <CardTitle>資産推移グラフ</CardTitle>
-        <div className="flex gap-1">
-          <Button
-            variant={chartMode === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setChartMode('all')}
-            className="text-xs h-7 px-2"
-          >
-            全て
-          </Button>
-          <Button
-            variant={chartMode === 'medianAnd5th' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setChartMode('medianAnd5th')}
-            className="text-xs h-7 px-2"
-          >
-            中央値+5%
-          </Button>
-          <Button
-            variant={chartMode === 'medianOnly' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setChartMode('medianOnly')}
-            className="text-xs h-7 px-2"
-          >
-            中央値のみ
-          </Button>
-        </div>
       </CardHeader>
       <CardContent>
         <div ref={containerRef} style={{ width: '100%', height: 288 }}>
@@ -153,23 +99,15 @@ export function AssetChart({ yearlyResults }: AssetChartProps) {
               <YAxis
                 tickFormatter={formatYAxis}
                 fontSize={12}
-                domain={[0, getYAxisMax()]}
               />
               <Tooltip
                 formatter={(value, name) => {
                   if (typeof value !== 'number') return ['-', '']
-                  // スタック用データはTooltipに表示しない
-                  if (String(name).startsWith('_')) return null
-                  // 非表示のラインはTooltipにも表示しない
-                  if (String(name) === 'upper' && !showUpper) return null
-                  if (String(name) === 'lower' && !showLower) return null
-                  if ((String(name) === 'p10' || String(name) === 'p25') && !showLower) return null
                   const labels: Record<string, string> = {
                     median: '50%',
                     lower: '5%',
                     p10: '10%',
                     p25: '25%',
-                    upper: '95%',
                   }
                   return [formatTooltip(value), labels[String(name)] || String(name)]
                 }}
@@ -180,29 +118,6 @@ export function AssetChart({ yearlyResults }: AssetChartProps) {
                   borderRadius: '6px',
                 }}
               />
-
-              {/* 信頼区間（5%〜95%）の帯 - スタック方式 */}
-              {showConfidenceBand && (
-                <>
-                  <Area
-                    type="monotone"
-                    dataKey="_stackBase"
-                    stackId="confidence"
-                    stroke="none"
-                    fill="transparent"
-                    legendType="none"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="_stackBand"
-                    stackId="confidence"
-                    stroke="none"
-                    fill="#3b82f6"
-                    fillOpacity={0.2}
-                    legendType="none"
-                  />
-                </>
-              )}
 
               {/* 枯渇ライン */}
               <ReferenceLine y={0} stroke="#ef4444" strokeDasharray="5 5" />
@@ -217,52 +132,34 @@ export function AssetChart({ yearlyResults }: AssetChartProps) {
               />
 
               {/* 5%タイルライン */}
-              {showLower && (
-                <Line
-                  type="monotone"
-                  dataKey="lower"
-                  stroke="#ef4444"
-                  strokeWidth={1}
-                  strokeDasharray="3 3"
-                  dot={false}
-                />
-              )}
+              <Line
+                type="monotone"
+                dataKey="lower"
+                stroke="#ef4444"
+                strokeWidth={1}
+                strokeDasharray="3 3"
+                dot={false}
+              />
 
               {/* 10%タイルライン */}
-              {showLower && (
-                <Line
-                  type="monotone"
-                  dataKey="p10"
-                  stroke="#f97316"
-                  strokeWidth={1}
-                  strokeDasharray="3 3"
-                  dot={false}
-                />
-              )}
+              <Line
+                type="monotone"
+                dataKey="p10"
+                stroke="#f97316"
+                strokeWidth={1}
+                strokeDasharray="3 3"
+                dot={false}
+              />
 
               {/* 25%タイルライン */}
-              {showLower && (
-                <Line
-                  type="monotone"
-                  dataKey="p25"
-                  stroke="#eab308"
-                  strokeWidth={1}
-                  strokeDasharray="3 3"
-                  dot={false}
-                />
-              )}
-
-              {/* 95%タイルライン */}
-              {showUpper && (
-                <Line
-                  type="monotone"
-                  dataKey="upper"
-                  stroke="#6b7280"
-                  strokeWidth={1}
-                  strokeDasharray="3 3"
-                  dot={false}
-                />
-              )}
+              <Line
+                type="monotone"
+                dataKey="p25"
+                stroke="#eab308"
+                strokeWidth={1}
+                strokeDasharray="3 3"
+                dot={false}
+              />
             </ComposedChart>
           ) : (
             <div className="h-full flex items-center justify-center">
@@ -275,34 +172,18 @@ export function AssetChart({ yearlyResults }: AssetChartProps) {
             <div className="w-4 h-0.5 bg-blue-600" />
             <span>50%</span>
           </div>
-          {showLower && (
-            <>
-              <div className="flex items-center gap-1">
-                <div className="w-4 h-0.5 bg-red-500" style={{ borderTopWidth: 1, borderTopStyle: 'dashed' }} />
-                <span>5%</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-4 h-0.5 bg-orange-500" style={{ borderTopWidth: 1, borderTopStyle: 'dashed' }} />
-                <span>10%</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-4 h-0.5 bg-yellow-500" style={{ borderTopWidth: 1, borderTopStyle: 'dashed' }} />
-                <span>25%</span>
-              </div>
-            </>
-          )}
-          {showUpper && (
-            <div className="flex items-center gap-1">
-              <div className="w-4 h-0.5 bg-gray-500" style={{ borderTopWidth: 1, borderTopStyle: 'dashed' }} />
-              <span>95%</span>
-            </div>
-          )}
-          {showConfidenceBand && (
-            <div className="flex items-center gap-1">
-              <div className="w-4 h-2 bg-blue-500/15" />
-              <span>5-95%範囲</span>
-            </div>
-          )}
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-0.5 bg-red-500" style={{ borderTopWidth: 1, borderTopStyle: 'dashed' }} />
+            <span>5%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-0.5 bg-orange-500" style={{ borderTopWidth: 1, borderTopStyle: 'dashed' }} />
+            <span>10%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-0.5 bg-yellow-500" style={{ borderTopWidth: 1, borderTopStyle: 'dashed' }} />
+            <span>25%</span>
+          </div>
         </div>
       </CardContent>
     </Card>
