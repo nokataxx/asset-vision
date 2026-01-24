@@ -34,9 +34,8 @@ export interface RegimeSettings {
   recoveryReturn: number // 戻り期利回り（%）
   recoveryStdDev: number // 戻り期標準偏差（%）
   crashProbability: number // 暴落発生確率（%）
-  recoveryYears: number // 戻り期継続年数
+  recoveryYears: number // 戻り期継続年数（平均、実際は±1年でランダム化）
   bondReturn: number // 国債リターン（%）
-  cashReturn: number // 現金リターン（%）
 }
 
 // 資産タイプ
@@ -117,16 +116,15 @@ export interface AppState {
 
 // デフォルト値
 export const DEFAULT_REGIME_SETTINGS: RegimeSettings = {
-  normalReturn: 7,
-  normalStdDev: 15,
-  crashReturn: -35,
+  normalReturn: 8,
+  normalStdDev: 16,
+  crashReturn: -30,
   crashStdDev: 20,
-  recoveryReturn: 20,
+  recoveryReturn: 15,
   recoveryStdDev: 18,
   crashProbability: 10,
-  recoveryYears: 3,
+  recoveryYears: 2,
   bondReturn: 1.2,
-  cashReturn: 0,
 }
 
 // 取崩し優先順位（固定ロジック）

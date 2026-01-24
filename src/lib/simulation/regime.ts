@@ -52,10 +52,13 @@ export function determineNextRegime(
       return state
 
     case 'crash':
-      // 暴落期 → 戻り期（翌年自動遷移）
+      // 暴落期 → 戻り期（翌年自動遷移、年数は平均±1年でランダム化）
+      const minYears = Math.max(1, settings.recoveryYears - 1)
+      const maxYears = settings.recoveryYears + 1
+      const recoveryYears = Math.floor(Math.random() * (maxYears - minYears + 1)) + minYears
       return {
         current: 'recovery',
-        recoveryYearsRemaining: settings.recoveryYears,
+        recoveryYearsRemaining: recoveryYears,
       }
 
     case 'recovery':

@@ -70,7 +70,20 @@ function App() {
     setAssets(migratedAssets)
     setIncomeExpensePlan(data.incomeExpensePlan)
     setAnnualPlans(data.annualPlans)
-    setRegimeSettings(data.regimeSettings)
+
+    // 古いデータ形式（recoveryYearsMin/Max）から新しい形式（recoveryYears）への変換
+    let migratedRegimeSettings = data.regimeSettings
+    const oldSettings = data.regimeSettings as RegimeSettings & {
+      recoveryYearsMin?: number
+      recoveryYearsMax?: number
+    }
+    if (oldSettings.recoveryYearsMin !== undefined && oldSettings.recoveryYears === undefined) {
+      migratedRegimeSettings = {
+        ...oldSettings,
+        recoveryYears: Math.round((oldSettings.recoveryYearsMin + (oldSettings.recoveryYearsMax ?? oldSettings.recoveryYearsMin)) / 2),
+      }
+    }
+    setRegimeSettings(migratedRegimeSettings)
   }, [])
 
   // データ永続化フック

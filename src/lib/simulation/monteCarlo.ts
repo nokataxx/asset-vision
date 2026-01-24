@@ -55,9 +55,8 @@ export function runSingleTrial(params: SimulationParams): TrialResult {
     }
 
     // 2. 資産の成長
-    // 国債と現金は通常通りリターンを適用
+    // 国債にリターンを適用（現金は0%なので変化なし）
     balances.bonds *= 1 + regimeSettings.bondReturn / 100
-    balances.cash *= 1 + regimeSettings.cashReturn / 100
 
     // 株式のリターンを計算
     const stockReturn = getStockReturn(regimeState.current, regimeSettings)
