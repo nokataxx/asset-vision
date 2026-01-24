@@ -30,6 +30,9 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 
+# Serena
+.serena/
+
 # env files (all .env files contain secrets)
 .env
 .env*.local
