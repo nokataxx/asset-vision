@@ -9,6 +9,7 @@ import type {
 import {
   createInitialRegimeState,
   determineNextRegime,
+  adjustRecoveryTargetForCashFlow,
   getStockReturn,
   isCrashRegime,
   type RegimeState,
@@ -115,6 +116,10 @@ export function runSingleTrial(params: SimulationParams): TrialResult {
       bondsLimit: initialAssets.bondsLimit,
     })
     balances = result.balances
+
+    // 4.5. 暴落期・戻り期中は収支を考慮して回復目標を調整
+    // 赤字の場合は回復目標が下がる（収支分だけ回復しなくて良い）
+    regimeState = adjustRecoveryTargetForCashFlow(regimeState, netIncome)
 
     // 5. 枯渇判定
     const totalAssets = calculateTotalAssets(balances)

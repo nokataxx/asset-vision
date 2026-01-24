@@ -85,6 +85,32 @@ export function determineNextRegime(
   }
 }
 
+
+/**
+ * 暴落期・戻り期中の収支を考慮して回復目標を調整
+ * 赤字（支出>収入）の場合は回復目標を下げる
+ * @param state 現在のレジーム状態
+ * @param netIncome 当年の収支（収入-支出、負の値は赤字）
+ * @returns 調整後のレジーム状態
+ */
+export function adjustRecoveryTargetForCashFlow(
+  state: RegimeState,
+  netIncome: number
+): RegimeState {
+  // 通常期は調整不要
+  if (state.current === 'normal') {
+    return state
+  }
+
+  // 暴落期・戻り期は収支に応じて回復目標を調整
+  // 赤字の場合（netIncome < 0）: 目標が下がる
+  // 黒字の場合（netIncome > 0）: 目標が上がる
+  return {
+    ...state,
+    precrashStocksBalance: state.precrashStocksBalance + netIncome,
+  }
+}
+
 /**
  * レジームに応じた株式利回りを返す（正規分布でランダム化）
  */
