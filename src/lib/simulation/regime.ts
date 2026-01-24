@@ -94,17 +94,10 @@ export function getStockReturn(regime: Regime, settings: RegimeSettings): number
 }
 
 /**
- * 現在のレジームが暴落中（期待リターンがマイナス）かどうかを判定
+ * 現在のレジームが暴落中または戻り期かどうかを判定
+ * 暴落期・戻り期は株式を温存するため、現金・国債から取崩す
  */
-export function isCrashRegime(regime: Regime, settings: RegimeSettings): boolean {
-  // 暴落判定は期待リターン（平均値）で判定
-  switch (regime) {
-    case 'crash':
-      return settings.crashReturn < 0
-    case 'recovery':
-      return settings.recoveryReturn < 0
-    case 'normal':
-    default:
-      return settings.normalReturn < 0
-  }
+export function isCrashRegime(regime: Regime, _settings: RegimeSettings): boolean {
+  // 暴落期と戻り期は株式を温存する取崩し戦略を使用
+  return regime === 'crash' || regime === 'recovery'
 }

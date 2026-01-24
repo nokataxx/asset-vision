@@ -79,28 +79,20 @@ function App() {
     debounceMs: 2000,
   })
 
-  // 年次計画の再生成
-  const handleRegenerateAnnualPlans = useCallback(() => {
-    if (incomeExpensePlan.duration > 0 && assets.age > 0) {
-      const plans = generateAnnualPlans(incomeExpensePlan, assets.age)
-      setAnnualPlans(plans)
-    }
-  }, [incomeExpensePlan, assets.age])
-
-  // 収支計画が変更されたら年次計画を再生成
+  // 収支計画が変更されたら年次計画を更新（既存の値を保持）
   const handleIncomeExpensePlanChange = (plan: IncomeExpensePlan) => {
     setIncomeExpensePlan(plan)
     if (plan.duration > 0 && assets.age > 0) {
-      const plans = generateAnnualPlans(plan, assets.age)
+      const plans = generateAnnualPlans(plan, assets.age, annualPlans)
       setAnnualPlans(plans)
     }
   }
 
-  // 年齢が変更されたら年次計画を再生成
+  // 年齢が変更されたら年次計画を更新（既存の値を保持）
   const handleAssetsChange = (newAssets: Assets) => {
     setAssets(newAssets)
     if (newAssets.age !== assets.age && incomeExpensePlan.duration > 0) {
-      const plans = generateAnnualPlans(incomeExpensePlan, newAssets.age)
+      const plans = generateAnnualPlans(incomeExpensePlan, newAssets.age, annualPlans)
       setAnnualPlans(plans)
     }
   }
@@ -211,7 +203,6 @@ function App() {
               <AnnualPlanTable
                 plans={annualPlans}
                 onChange={setAnnualPlans}
-                onRegenerate={handleRegenerateAnnualPlans}
                 incomeGrowthRate={incomeExpensePlan.incomeGrowthRate}
                 expenseGrowthRate={incomeExpensePlan.expenseGrowthRate}
               />

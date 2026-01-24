@@ -43,7 +43,6 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 <Input
                   id="normalReturn"
                   type="number"
-                  step="0.1"
                   value={settings.normalReturn}
                   onChange={(e) =>
                     handleChange('normalReturn', parseFloat(e.target.value) || 0)
@@ -59,7 +58,6 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 <Input
                   id="normalStdDev"
                   type="number"
-                  step="0.1"
                   value={settings.normalStdDev ?? 10}
                   onChange={(e) =>
                     handleChange('normalStdDev', parseFloat(e.target.value) || 0)
@@ -78,7 +76,6 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 <Input
                   id="crashReturn"
                   type="number"
-                  step="0.1"
                   value={settings.crashReturn}
                   onChange={(e) =>
                     handleChange('crashReturn', parseFloat(e.target.value) || 0)
@@ -94,7 +91,6 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 <Input
                   id="crashStdDev"
                   type="number"
-                  step="0.1"
                   value={settings.crashStdDev ?? 15}
                   onChange={(e) =>
                     handleChange('crashStdDev', parseFloat(e.target.value) || 0)
@@ -113,7 +109,6 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 <Input
                   id="recoveryReturn"
                   type="number"
-                  step="0.1"
                   value={settings.recoveryReturn}
                   onChange={(e) =>
                     handleChange('recoveryReturn', parseFloat(e.target.value) || 0)
@@ -129,7 +124,6 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 <Input
                   id="recoveryStdDev"
                   type="number"
-                  step="0.1"
                   value={settings.recoveryStdDev ?? 12}
                   onChange={(e) =>
                     handleChange('recoveryStdDev', parseFloat(e.target.value) || 0)
@@ -148,7 +142,6 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 <Input
                   id="crashProbability"
                   type="number"
-                  step="0.1"
                   value={settings.crashProbability}
                   onChange={(e) =>
                     handleChange('crashProbability', parseFloat(e.target.value) || 0)
@@ -186,7 +179,6 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 <Input
                   id="bondReturn"
                   type="number"
-                  step="0.1"
                   value={settings.bondReturn}
                   onChange={(e) =>
                     handleChange('bondReturn', parseFloat(e.target.value) || 0)
@@ -202,7 +194,6 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 <Input
                   id="cashReturn"
                   type="number"
-                  step="0.1"
                   value={settings.cashReturn}
                   onChange={(e) =>
                     handleChange('cashReturn', parseFloat(e.target.value) || 0)

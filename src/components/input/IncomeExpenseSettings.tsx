@@ -72,7 +72,6 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
             <Input
               id="incomeGrowthRate"
               type="number"
-              step="0.1"
               value={plan.incomeGrowthRate || ''}
               onChange={(e) =>
                 handleChange('incomeGrowthRate', parseFloat(e.target.value) || 0)
@@ -87,7 +86,6 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
             <Input
               id="expenseGrowthRate"
               type="number"
-              step="0.1"
               value={plan.expenseGrowthRate || ''}
               onChange={(e) =>
                 handleChange('expenseGrowthRate', parseFloat(e.target.value) || 0)

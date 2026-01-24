@@ -1,13 +1,11 @@
 import type { AnnualPlan } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { RefreshCw, X } from 'lucide-react'
+import { X } from 'lucide-react'
 
 interface AnnualPlanTableProps {
   plans: AnnualPlan[]
   onChange: (plans: AnnualPlan[]) => void
-  onRegenerate: () => void
   incomeGrowthRate: number
   expenseGrowthRate: number
 }
@@ -15,7 +13,6 @@ interface AnnualPlanTableProps {
 export function AnnualPlanTable({
   plans,
   onChange,
-  onRegenerate,
   incomeGrowthRate,
   expenseGrowthRate,
 }: AnnualPlanTableProps) {
@@ -61,12 +58,8 @@ export function AnnualPlanTable({
 
   return (
     <Card className="h-full">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+      <CardHeader>
         <CardTitle className="text-base">年次収支テーブル</CardTitle>
-        <Button variant="outline" size="sm" onClick={onRegenerate}>
-          <RefreshCw className="h-4 w-4 mr-1" />
-          再生成
-        </Button>
       </CardHeader>
       <CardContent>
         {plans.length === 0 ? (
