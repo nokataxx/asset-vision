@@ -82,10 +82,6 @@ export interface YearlyResult {
   assets10th: number // 10%タイル
   assets25th: number // 25%タイル
   assets50th: number // 中央値
-  // 50%タイルの内訳
-  stocks50th: number // 株式50%タイル
-  bonds50th: number // 国債50%タイル
-  cash50th: number // 現金50%タイル
 }
 
 // サマリー指標

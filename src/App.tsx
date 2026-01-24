@@ -8,6 +8,7 @@ import { RegimeSettingsInput } from '@/components/input/RegimeSettingsInput'
 import { AssetChart } from '@/components/output/AssetChart'
 import { SummaryMetrics } from '@/components/output/SummaryMetrics'
 import { YearlyResultTable } from '@/components/output/YearlyResultTable'
+import { SampleTrialTable } from '@/components/output/SampleTrialTable'
 import { Button } from '@/components/ui/button'
 import { runMonteCarloSimulation } from '@/lib/simulation/monteCarlo'
 import { aggregateSimulationResults } from '@/lib/simulation/statistics'
@@ -242,6 +243,7 @@ function App() {
           <AssetChart yearlyResults={simulationResult?.yearlyResults ?? []} />
           <SummaryMetrics metrics={simulationResult?.summary ?? null} />
           <YearlyResultTable yearlyResults={simulationResult?.yearlyResults ?? []} />
+          <SampleTrialTable trialResults={simulationResult?.trialResults ?? []} />
         </>
       }
     />
