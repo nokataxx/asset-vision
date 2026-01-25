@@ -78,22 +78,38 @@ export interface YearlyResult {
   income: number
   basicExpense: number
   extraExpense: number
-  assets5th: number // 5%タイル
-  assets10th: number // 10%タイル
-  assets25th: number // 25%タイル
-  assets50th: number // 中央値
+  assets75th: number // 75%タイル（楽観）
+  assets50th: number // 50%タイル（中央値）
+  assets25th: number // 25%タイル（悲観）
+  assets10th: number // 10%タイル（最悪）
 }
 
 // サマリー指標
 export interface SummaryMetrics {
-  depletionProbability: number // 資産枯渇確率（%）
-  medianDepletionYear: number | null // 枯渇年の中央値
+  // メイン指標
+  successRate: number // 成功率（%）= 100 - 枯渇確率
+  safeWithdrawalRate: number | null // 安全引出率（%）= 年間取崩し額 ÷ 初期資産
+  // シナリオ別結果
+  depletionAge75th: number | null // 枯渇時年齢（楽観・75%タイル）
+  depletionAge50th: number | null // 枯渇時年齢（中央値）
+  depletionAge25th: number | null // 枯渇時年齢（悲観・25%タイル）
+  depletionAge10th: number | null // 枯渇時年齢（最悪・10%タイル）
+  finalAssets75th: number // 期末資産（楽観・75%タイル）
   finalAssets50th: number // 期末資産（中央値）
-  finalAssets5th: number // 期末資産（5%タイル）
-  finalAssets10th: number // 期末資産（10%タイル）
-  finalAssets25th: number // 期末資産（25%タイル）
-  finalAssets95th: number // 期末資産（95%タイル）
+  finalAssets25th: number // 期末資産（悲観・25%タイル）
+  finalAssets10th: number // 期末資産（最悪・10%タイル）
+  minAssets75th: number // 最低到達資産（楽観）
+  minAssets50th: number // 最低到達資産（中央値）
+  minAssets25th: number // 最低到達資産（悲観）
+  minAssets10th: number // 最低到達資産（最悪）
+  // リスク指標
   averageCrashCount: number // 暴落発生回数（平均）
+  averageRecoveryYears: number | null // 平均回復期間（年）
+  averageDepletionAge: number | null // 枯渇時の平均年齢（枯渇する場合）
+  // 互換性のため残す（グラフ用）
+  finalAssets5th: number
+  finalAssets95th: number
+  depletionProbability: number
 }
 
 // シミュレーション結果

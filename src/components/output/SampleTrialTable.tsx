@@ -8,25 +8,45 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { calculatePercentile } from '@/lib/simulation/statistics'
 
 interface SampleTrialTableProps {
   trialResults: TrialResult[]
 }
 
-// 中央値に近い試行を選択
+// 年次パスが中央値に最も近い試行を選択
 function selectMedianTrial(trialResults: TrialResult[]): TrialResult | null {
   if (trialResults.length === 0) return null
 
-  // 最終資産額でソート
-  const sorted = [...trialResults].sort((a, b) => {
-    const aFinal = a.yearlyResults[a.yearlyResults.length - 1]?.totalAssets ?? 0
-    const bFinal = b.yearlyResults[b.yearlyResults.length - 1]?.totalAssets ?? 0
-    return aFinal - bFinal
-  })
+  const numYears = trialResults[0].yearlyResults.length
 
-  // 中央の試行を返す
-  const medianIndex = Math.floor(sorted.length / 2)
-  return sorted[medianIndex]
+  // 各年の50%タイル（中央値）を計算
+  const medianPath: number[] = []
+  for (let yearIndex = 0; yearIndex < numYears; yearIndex++) {
+    const yearAssets = trialResults.map(
+      (trial) => trial.yearlyResults[yearIndex]?.totalAssets ?? 0
+    )
+    medianPath.push(calculatePercentile(yearAssets, 50))
+  }
+
+  // 各試行について、中央値パスからの距離（二乗和）を計算
+  let minDistance = Infinity
+  let closestTrial: TrialResult | null = null
+
+  for (const trial of trialResults) {
+    let distance = 0
+    for (let yearIndex = 0; yearIndex < numYears; yearIndex++) {
+      const diff = (trial.yearlyResults[yearIndex]?.totalAssets ?? 0) - medianPath[yearIndex]
+      distance += diff * diff
+    }
+
+    if (distance < minDistance) {
+      minDistance = distance
+      closestTrial = trial
+    }
+  }
+
+  return closestTrial
 }
 
 // レジームの日本語表示
@@ -140,7 +160,7 @@ export function SampleTrialTable({ trialResults }: SampleTrialTableProps) {
         </div>
         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-muted-foreground">
           <span>※金額の単位はすべて万円</span>
-          <span>※最終年の資産額で50パーセンタイルの試行を1つ選択</span>
+          <span>※年次資産推移が50%タイルに最も近い試行を選択</span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-3 bg-red-100 dark:bg-red-900/30 border"></span>
             暴落期

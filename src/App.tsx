@@ -129,7 +129,8 @@ function App() {
         1000
       )
 
-      const result = aggregateSimulationResults(trialResults, annualPlans)
+      const initialTotalAssets = assets.stocks + assets.bonds + assets.cash
+      const result = aggregateSimulationResults(trialResults, annualPlans, initialTotalAssets)
       setSimulationResult(result)
     } finally {
       setIsSimulating(false)

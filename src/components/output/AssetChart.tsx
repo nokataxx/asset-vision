@@ -59,10 +59,10 @@ export function AssetChart({ yearlyResults }: AssetChartProps) {
   const chartData = yearlyResults.map((r) => ({
     year: r.year,
     age: r.age,
+    p75: r.assets75th,
     median: r.assets50th,
-    lower: r.assets5th,
-    p10: r.assets10th,
     p25: r.assets25th,
+    p10: r.assets10th,
   }))
 
   const formatYAxis = (value: number) => {
@@ -104,10 +104,10 @@ export function AssetChart({ yearlyResults }: AssetChartProps) {
                 formatter={(value, name) => {
                   if (typeof value !== 'number') return ['-', '']
                   const labels: Record<string, string> = {
-                    median: '50%',
-                    lower: '5%',
-                    p10: '10%',
-                    p25: '25%',
+                    p75: '楽観(75%)',
+                    median: '中央値(50%)',
+                    p25: '悲観(25%)',
+                    p10: '最悪(10%)',
                   }
                   return [formatTooltip(value), labels[String(name)] || String(name)]
                 }}
@@ -117,10 +117,24 @@ export function AssetChart({ yearlyResults }: AssetChartProps) {
                   border: '1px solid #e5e7eb',
                   borderRadius: '6px',
                 }}
+                itemSorter={(item) => {
+                  const order: Record<string, number> = { p75: 0, median: 1, p25: 2, p10: 3 }
+                  return order[item.dataKey as string] ?? 99
+                }}
               />
 
               {/* 枯渇ライン */}
               <ReferenceLine y={0} stroke="#ef4444" strokeDasharray="5 5" />
+
+              {/* 75%タイルライン（楽観） */}
+              <Line
+                type="monotone"
+                dataKey="p75"
+                stroke="#22c55e"
+                strokeWidth={1}
+                strokeDasharray="3 3"
+                dot={false}
+              />
 
               {/* 中央値ライン */}
               <Line
@@ -131,31 +145,21 @@ export function AssetChart({ yearlyResults }: AssetChartProps) {
                 dot={false}
               />
 
-              {/* 5%タイルライン */}
-              <Line
-                type="monotone"
-                dataKey="lower"
-                stroke="#ef4444"
-                strokeWidth={1}
-                strokeDasharray="3 3"
-                dot={false}
-              />
-
-              {/* 10%タイルライン */}
-              <Line
-                type="monotone"
-                dataKey="p10"
-                stroke="#f97316"
-                strokeWidth={1}
-                strokeDasharray="3 3"
-                dot={false}
-              />
-
-              {/* 25%タイルライン */}
+              {/* 25%タイルライン（悲観） */}
               <Line
                 type="monotone"
                 dataKey="p25"
                 stroke="#eab308"
+                strokeWidth={1}
+                strokeDasharray="3 3"
+                dot={false}
+              />
+
+              {/* 10%タイルライン（最悪） */}
+              <Line
+                type="monotone"
+                dataKey="p10"
+                stroke="#ef4444"
                 strokeWidth={1}
                 strokeDasharray="3 3"
                 dot={false}
@@ -169,20 +173,20 @@ export function AssetChart({ yearlyResults }: AssetChartProps) {
         </div>
         <div className="flex flex-wrap justify-center gap-4 mt-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
+            <div className="w-4 h-0.5 bg-green-500" style={{ borderTopWidth: 1, borderTopStyle: 'dashed' }} />
+            <span>楽観(75%)</span>
+          </div>
+          <div className="flex items-center gap-1">
             <div className="w-4 h-0.5 bg-blue-600" />
-            <span>50%</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-4 h-0.5 bg-red-500" style={{ borderTopWidth: 1, borderTopStyle: 'dashed' }} />
-            <span>5%</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-4 h-0.5 bg-orange-500" style={{ borderTopWidth: 1, borderTopStyle: 'dashed' }} />
-            <span>10%</span>
+            <span>中央値(50%)</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-4 h-0.5 bg-yellow-500" style={{ borderTopWidth: 1, borderTopStyle: 'dashed' }} />
-            <span>25%</span>
+            <span>悲観(25%)</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-0.5 bg-red-500" style={{ borderTopWidth: 1, borderTopStyle: 'dashed' }} />
+            <span>最悪(10%)</span>
           </div>
         </div>
       </CardContent>

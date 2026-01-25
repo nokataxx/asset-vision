@@ -44,10 +44,10 @@ export function YearlyResultTable({ yearlyResults }: YearlyResultTableProps) {
                 <TableHead className="text-right">収入</TableHead>
                 <TableHead className="text-right">支出①</TableHead>
                 <TableHead className="text-right">支出②</TableHead>
-                <TableHead className="text-right">資産(5%)</TableHead>
-                <TableHead className="text-right">資産(10%)</TableHead>
-                <TableHead className="text-right">資産(25%)</TableHead>
-                <TableHead className="text-right">資産(50%)</TableHead>
+                <TableHead className="text-right">楽観(75%)</TableHead>
+                <TableHead className="text-right">中央値(50%)</TableHead>
+                <TableHead className="text-right">悲観(25%)</TableHead>
+                <TableHead className="text-right">最悪(10%)</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -64,33 +64,25 @@ export function YearlyResultTable({ yearlyResults }: YearlyResultTableProps) {
                   <TableCell className="text-right">
                     {result.extraExpense.toLocaleString()}
                   </TableCell>
-                  <TableCell
-                    className={`text-right ${
-                      result.assets5th <= 0 ? 'text-destructive' : ''
-                    }`}
-                  >
-                    {result.assets5th.toLocaleString()}
+                  <TableCell className="text-right text-green-600">
+                    {result.assets75th.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {result.assets50th.toLocaleString()}
                   </TableCell>
                   <TableCell
                     className={`text-right ${
-                      result.assets10th <= 0 ? 'text-destructive' : ''
-                    }`}
-                  >
-                    {result.assets10th.toLocaleString()}
-                  </TableCell>
-                  <TableCell
-                    className={`text-right ${
-                      result.assets25th <= 0 ? 'text-destructive' : ''
+                      result.assets25th <= 0 ? 'text-destructive' : 'text-yellow-600'
                     }`}
                   >
                     {result.assets25th.toLocaleString()}
                   </TableCell>
                   <TableCell
                     className={`text-right ${
-                      result.assets50th <= 0 ? 'text-destructive' : ''
+                      result.assets10th <= 0 ? 'text-destructive' : 'text-orange-600'
                     }`}
                   >
-                    {result.assets50th.toLocaleString()}
+                    {result.assets10th.toLocaleString()}
                   </TableCell>
                 </TableRow>
               ))}
