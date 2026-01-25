@@ -131,26 +131,13 @@ export interface AppState {
 // デフォルト値
 export const DEFAULT_REGIME_SETTINGS: RegimeSettings = {
   normalReturn: 10,
-  normalStdDev: 13,
-  crashReturn: -30,
+  normalStdDev: 10,
+  crashReturn: -22,
   crashStdDev: 28,
   recoveryReturn: 18,
-  recoveryStdDev: 22,
-  crashProbability: 15,
+  recoveryStdDev: 20,
+  crashProbability: 13,
   bondReturn: 1.2,
-}
-
-
-// レジーム設定の参照値（楽観/現実/悲観）
-export const REGIME_REFERENCE_VALUES: Record<keyof RegimeSettings, { optimistic: number; realistic: number; pessimistic: number }> = {
-  normalReturn: { optimistic: 14, realistic: 10, pessimistic: 6 },
-  normalStdDev: { optimistic: 10, realistic: 13, pessimistic: 18 },
-  crashReturn: { optimistic: -20, realistic: -30, pessimistic: -45 },
-  crashStdDev: { optimistic: 20, realistic: 28, pessimistic: 35 },
-  recoveryReturn: { optimistic: 25, realistic: 18, pessimistic: 10 },
-  recoveryStdDev: { optimistic: 18, realistic: 22, pessimistic: 28 },
-  crashProbability: { optimistic: 8, realistic: 15, pessimistic: 25 },
-  bondReturn: { optimistic: 2, realistic: 1.2, pessimistic: 0.5 },
 }
 
 // 取崩し優先順位（固定ロジック）

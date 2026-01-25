@@ -1,16 +1,10 @@
 import { useMemo } from 'react'
-import { DEFAULT_REGIME_SETTINGS, REGIME_REFERENCE_VALUES, type RegimeSettings } from '@/types'
+import { DEFAULT_REGIME_SETTINGS, type RegimeSettings } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SpinInput } from '@/components/ui/spin-input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { RotateCcw, Info } from 'lucide-react'
+import { RotateCcw } from 'lucide-react'
 
 interface RegimeSettingsInputProps {
   settings: RegimeSettings
@@ -50,18 +44,6 @@ function calculateExpectedReturn(settings: RegimeSettings): number {
   )
 }
 
-// 参照値テーブルの行データ
-const referenceTableRows = [
-  { label: '通常期利回り', field: 'normalReturn' as const, unit: '%' },
-  { label: '通常期標準偏差', field: 'normalStdDev' as const, unit: '%' },
-  { label: '暴落期利回り', field: 'crashReturn' as const, unit: '%' },
-  { label: '暴落期標準偏差', field: 'crashStdDev' as const, unit: '%' },
-  { label: '暴落発生確率', field: 'crashProbability' as const, unit: '%' },
-  { label: '戻り期利回り', field: 'recoveryReturn' as const, unit: '%' },
-  { label: '戻り期標準偏差', field: 'recoveryStdDev' as const, unit: '%' },
-  { label: '国債利回り', field: 'bondReturn' as const, unit: '%' },
-]
-
 export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputProps) {
   const handleChange = (field: keyof RegimeSettings, value: string) => {
     onChange({ ...settings, [field]: parseFloat(value) || 0 })
@@ -73,47 +55,7 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1">
-            <CardTitle>レジーム設定</CardTitle>
-            <TooltipProvider delayDuration={100}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button className="text-muted-foreground hover:text-foreground transition-colors">
-                    <Info className="h-4 w-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" align="start" className="w-auto max-w-none">
-                  <div className="text-xs">
-                    <p className="font-medium mb-2">過去データに基づく参照値（名目リターン）</p>
-                    <table className="border-collapse">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left pr-4 pb-1">指標</th>
-                          <th className="text-right pr-3 pb-1 text-green-600">楽観</th>
-                          <th className="text-right pr-3 pb-1">現実</th>
-                          <th className="text-right pb-1 text-orange-600">悲観</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {referenceTableRows.map((row) => {
-                          const ref = REGIME_REFERENCE_VALUES[row.field]
-                          return (
-                            <tr key={row.field}>
-                              <td className="pr-4 py-0.5">{row.label}</td>
-                              <td className="text-right pr-3 text-green-600">{ref.optimistic}</td>
-                              <td className="text-right pr-3">{ref.realistic}</td>
-                              <td className="text-right text-orange-600">{ref.pessimistic}</td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                    <p className="mt-2 text-muted-foreground">※S&P500等の過去実績に基づく</p>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
+          <CardTitle>レジーム設定</CardTitle>
           <span className="text-sm text-muted-foreground">
             長期期待リターン:{' '}
             <span className="font-medium text-foreground">
@@ -156,7 +98,7 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 value={settings.normalStdDev || ''}
                 onChange={(value) => handleChange('normalStdDev', value)}
                 step={0.5}
-                placeholder="13"
+                placeholder="10"
               />
             </div>
           </div>
@@ -172,7 +114,7 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 value={settings.crashReturn || ''}
                 onChange={(value) => handleChange('crashReturn', value)}
                 step={1}
-                placeholder="-30"
+                placeholder="-22"
               />
             </div>
 
@@ -200,7 +142,7 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 step={1}
                 min={0}
                 max={100}
-                placeholder="15"
+                placeholder="13"
               />
             </div>
           </div>
@@ -229,7 +171,7 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 value={settings.recoveryStdDev || ''}
                 onChange={(value) => handleChange('recoveryStdDev', value)}
                 step={0.5}
-                placeholder="22"
+                placeholder="20"
               />
             </div>
           </div>
