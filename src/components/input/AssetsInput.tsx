@@ -2,6 +2,7 @@ import type { Assets } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { VALIDATION_CONSTRAINTS, clampValue } from '@/lib/validation'
 
 interface AssetsInputProps {
   assets: Assets
@@ -10,6 +11,23 @@ interface AssetsInputProps {
 
 export function AssetsInput({ assets, onChange }: AssetsInputProps) {
   const totalAssets = assets.stocks + assets.bonds + assets.cash
+
+  const handleAssetChange = (field: keyof Assets, value: string) => {
+    const numValue = parseFloat(value) || 0
+    onChange({ ...assets, [field]: numValue })
+  }
+
+  const handleAssetBlur = (field: keyof Assets, isLimit: boolean = false) => {
+    const constraint = isLimit ? 'assetLimit' : 'assets'
+    const currentValue = assets[field]
+    const clampedValue = clampValue(currentValue, constraint)
+    if (currentValue !== clampedValue) {
+      onChange({ ...assets, [field]: clampedValue })
+    }
+  }
+
+  const { min: assetMin, max: assetMax } = VALIDATION_CONSTRAINTS.assets
+  const { min: limitMin, max: limitMax } = VALIDATION_CONSTRAINTS.assetLimit
 
   return (
     <Card className="h-full">
@@ -24,10 +42,11 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
             <Input
               id="stocks"
               type="number"
+              min={assetMin}
+              max={assetMax}
               value={assets.stocks || ''}
-              onChange={(e) =>
-                onChange({ ...assets, stocks: parseFloat(e.target.value) || 0 })
-              }
+              onChange={(e) => handleAssetChange('stocks', e.target.value)}
+              onBlur={() => handleAssetBlur('stocks')}
               placeholder="0"
             />
           </div>
@@ -40,10 +59,11 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
             <Input
               id="bonds"
               type="number"
+              min={assetMin}
+              max={assetMax}
               value={assets.bonds || ''}
-              onChange={(e) =>
-                onChange({ ...assets, bonds: parseFloat(e.target.value) || 0 })
-              }
+              onChange={(e) => handleAssetChange('bonds', e.target.value)}
+              onBlur={() => handleAssetBlur('bonds')}
               placeholder="0"
             />
           </div>
@@ -52,10 +72,11 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
             <Input
               id="bondsLimit"
               type="number"
+              min={limitMin}
+              max={limitMax}
               value={assets.bondsLimit || ''}
-              onChange={(e) =>
-                onChange({ ...assets, bondsLimit: parseFloat(e.target.value) || 0 })
-              }
+              onChange={(e) => handleAssetChange('bondsLimit', e.target.value)}
+              onBlur={() => handleAssetBlur('bondsLimit', true)}
               placeholder="1000"
             />
           </div>
@@ -68,10 +89,11 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
             <Input
               id="cash"
               type="number"
+              min={assetMin}
+              max={assetMax}
               value={assets.cash || ''}
-              onChange={(e) =>
-                onChange({ ...assets, cash: parseFloat(e.target.value) || 0 })
-              }
+              onChange={(e) => handleAssetChange('cash', e.target.value)}
+              onBlur={() => handleAssetBlur('cash')}
               placeholder="0"
             />
           </div>
@@ -80,10 +102,11 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
             <Input
               id="cashLimit"
               type="number"
+              min={limitMin}
+              max={limitMax}
               value={assets.cashLimit || ''}
-              onChange={(e) =>
-                onChange({ ...assets, cashLimit: parseFloat(e.target.value) || 0 })
-              }
+              onChange={(e) => handleAssetChange('cashLimit', e.target.value)}
+              onBlur={() => handleAssetBlur('cashLimit', true)}
               placeholder="500"
             />
           </div>

@@ -105,9 +105,12 @@ export function adjustRecoveryTargetForCashFlow(
   // 暴落期・戻り期は収支に応じて回復目標を調整
   // 赤字の場合（netIncome < 0）: 目標が下がる
   // 黒字の場合（netIncome > 0）: 目標が上がる
+  // 注: 回復目標は0未満にならないようにクランプする
+  // （継続的な赤字で目標が負になると回復判定が永久に成立しなくなるため）
+  const adjustedTarget = Math.max(0, state.precrashStocksBalance + netIncome)
   return {
     ...state,
-    precrashStocksBalance: state.precrashStocksBalance + netIncome,
+    precrashStocksBalance: adjustedTarget,
   }
 }
 

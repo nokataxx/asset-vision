@@ -5,6 +5,7 @@ import { SpinInput } from '@/components/ui/spin-input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { RotateCcw } from 'lucide-react'
+import { VALIDATION_CONSTRAINTS, clampValue } from '@/lib/validation'
 
 interface RegimeSettingsInputProps {
   settings: RegimeSettings
@@ -49,7 +50,19 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
     onChange({ ...settings, [field]: parseFloat(value) || 0 })
   }
 
+  const handleBlur = (field: keyof RegimeSettings, constraint: 'regimeReturn' | 'stdDev' | 'probability' | 'bondReturn') => {
+    const clampedValue = clampValue(settings[field], constraint)
+    if (settings[field] !== clampedValue) {
+      onChange({ ...settings, [field]: clampedValue })
+    }
+  }
+
   const expectedReturn = useMemo(() => calculateExpectedReturn(settings), [settings])
+
+  const { min: returnMin, max: returnMax } = VALIDATION_CONSTRAINTS.regimeReturn
+  const { min: stdMin, max: stdMax } = VALIDATION_CONSTRAINTS.stdDev
+  const { min: probMin, max: probMax } = VALIDATION_CONSTRAINTS.probability
+  const { min: bondMin, max: bondMax } = VALIDATION_CONSTRAINTS.bondReturn
 
   return (
     <Card className="h-full">
@@ -84,7 +97,10 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 id="normalReturn"
                 value={settings.normalReturn || ''}
                 onChange={(value) => handleChange('normalReturn', value)}
+                onBlur={() => handleBlur('normalReturn', 'regimeReturn')}
                 step={0.5}
+                min={returnMin}
+                max={returnMax}
                 placeholder="10"
               />
             </div>
@@ -97,7 +113,10 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 id="normalStdDev"
                 value={settings.normalStdDev || ''}
                 onChange={(value) => handleChange('normalStdDev', value)}
+                onBlur={() => handleBlur('normalStdDev', 'stdDev')}
                 step={0.5}
+                min={stdMin}
+                max={stdMax}
                 placeholder="10"
               />
             </div>
@@ -113,7 +132,10 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 id="crashReturn"
                 value={settings.crashReturn || ''}
                 onChange={(value) => handleChange('crashReturn', value)}
+                onBlur={() => handleBlur('crashReturn', 'regimeReturn')}
                 step={1}
+                min={returnMin}
+                max={returnMax}
                 placeholder="-22"
               />
             </div>
@@ -126,7 +148,10 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 id="crashStdDev"
                 value={settings.crashStdDev || ''}
                 onChange={(value) => handleChange('crashStdDev', value)}
+                onBlur={() => handleBlur('crashStdDev', 'stdDev')}
                 step={0.5}
+                min={stdMin}
+                max={stdMax}
                 placeholder="28"
               />
             </div>
@@ -139,9 +164,10 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 id="crashProbability"
                 value={settings.crashProbability || ''}
                 onChange={(value) => handleChange('crashProbability', value)}
+                onBlur={() => handleBlur('crashProbability', 'probability')}
                 step={1}
-                min={0}
-                max={100}
+                min={probMin}
+                max={probMax}
                 placeholder="13"
               />
             </div>
@@ -157,7 +183,10 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 id="recoveryReturn"
                 value={settings.recoveryReturn || ''}
                 onChange={(value) => handleChange('recoveryReturn', value)}
+                onBlur={() => handleBlur('recoveryReturn', 'regimeReturn')}
                 step={1}
+                min={returnMin}
+                max={returnMax}
                 placeholder="18"
               />
             </div>
@@ -170,7 +199,10 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 id="recoveryStdDev"
                 value={settings.recoveryStdDev || ''}
                 onChange={(value) => handleChange('recoveryStdDev', value)}
+                onBlur={() => handleBlur('recoveryStdDev', 'stdDev')}
                 step={0.5}
+                min={stdMin}
+                max={stdMax}
                 placeholder="20"
               />
             </div>
@@ -186,7 +218,10 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 id="bondReturn"
                 value={settings.bondReturn || ''}
                 onChange={(value) => handleChange('bondReturn', value)}
+                onBlur={() => handleBlur('bondReturn', 'bondReturn')}
                 step={0.1}
+                min={bondMin}
+                max={bondMax}
                 placeholder="1.2"
               />
             </div>

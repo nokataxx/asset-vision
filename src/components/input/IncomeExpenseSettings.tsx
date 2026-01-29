@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { SpinInput } from '@/components/ui/spin-input'
 import { Label } from '@/components/ui/label'
+import { VALIDATION_CONSTRAINTS, clampValue } from '@/lib/validation'
 
 interface IncomeExpenseSettingsProps {
   plan: IncomeExpensePlan
@@ -20,6 +21,39 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
     onChange({ ...plan, [field]: parseFloat(value) || 0 })
   }
 
+  const handleAgeBlur = () => {
+    const clampedAge = clampValue(age, 'age')
+    if (age !== clampedAge) {
+      onAgeChange(clampedAge)
+    }
+  }
+
+  const handleDurationBlur = () => {
+    const clampedDuration = clampValue(plan.duration, 'duration')
+    if (plan.duration !== clampedDuration) {
+      onChange({ ...plan, duration: clampedDuration })
+    }
+  }
+
+  const handleStartYearBlur = () => {
+    const clampedStartYear = clampValue(plan.startYear, 'startYear')
+    if (plan.startYear !== clampedStartYear) {
+      onChange({ ...plan, startYear: clampedStartYear })
+    }
+  }
+
+  const handleGrowthRateBlur = (field: 'incomeGrowthRate' | 'expenseGrowthRate') => {
+    const clampedValue = clampValue(plan[field], 'growthRate')
+    if (plan[field] !== clampedValue) {
+      onChange({ ...plan, [field]: clampedValue })
+    }
+  }
+
+  const { min: ageMin, max: ageMax } = VALIDATION_CONSTRAINTS.age
+  const { min: durationMin, max: durationMax } = VALIDATION_CONSTRAINTS.duration
+  const { min: startYearMin, max: startYearMax } = VALIDATION_CONSTRAINTS.startYear
+  const { min: growthMin, max: growthMax } = VALIDATION_CONSTRAINTS.growthRate
+
   return (
     <Card className="h-full">
       <CardHeader>
@@ -33,8 +67,11 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
             <Input
               id="age"
               type="number"
+              min={ageMin}
+              max={ageMax}
               value={age || ''}
               onChange={(e) => onAgeChange(parseInt(e.target.value) || 0)}
+              onBlur={handleAgeBlur}
               placeholder="30"
             />
           </div>
@@ -47,8 +84,11 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
             <Input
               id="startYear"
               type="number"
+              min={startYearMin}
+              max={startYearMax}
               value={plan.startYear || ''}
               onChange={(e) => handleIntChange('startYear', e.target.value)}
+              onBlur={handleStartYearBlur}
               placeholder={new Date().getFullYear().toString()}
             />
           </div>
@@ -59,8 +99,11 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
             <Input
               id="duration"
               type="number"
+              min={durationMin}
+              max={durationMax}
               value={plan.duration || ''}
               onChange={(e) => handleIntChange('duration', e.target.value)}
+              onBlur={handleDurationBlur}
               placeholder="30"
             />
           </div>
@@ -74,7 +117,10 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
               id="incomeGrowthRate"
               value={plan.incomeGrowthRate || ''}
               onChange={(value) => handleFloatChange('incomeGrowthRate', value)}
+              onBlur={() => handleGrowthRateBlur('incomeGrowthRate')}
               step={0.5}
+              min={growthMin}
+              max={growthMax}
               placeholder="0"
             />
           </div>
@@ -86,7 +132,10 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
               id="expenseGrowthRate"
               value={plan.expenseGrowthRate || ''}
               onChange={(value) => handleFloatChange('expenseGrowthRate', value)}
+              onBlur={() => handleGrowthRateBlur('expenseGrowthRate')}
               step={0.5}
+              min={growthMin}
+              max={growthMax}
               placeholder="0"
             />
           </div>
