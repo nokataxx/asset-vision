@@ -233,21 +233,30 @@ export function calculateAverageDepletionAge(
 }
 
 /**
- * 安全引出率を計算（年間取崩し額 ÷ 初期資産）
+ * 安全引出率を計算（年間平均取崩し額 ÷ 初期資産）
+ *
+ * 従来の4%ルールは初年度のみを基準としていたが、
+ * 支出成長率がある場合は実態を反映しないため、
+ * シミュレーション期間全体の平均取崩し額を使用する。
  */
 export function calculateSafeWithdrawalRate(
   annualPlans: AnnualPlan[],
   initialAssets: number
 ): number | null {
-  if (initialAssets <= 0) return null
+  if (initialAssets <= 0 || annualPlans.length === 0) return null
 
-  // 初年度の取崩し額（支出 - 収入、マイナスなら0）
-  const firstYear = annualPlans[0]
-  const annualWithdrawal = Math.max(0, firstYear.basicExpense + firstYear.extraExpense - firstYear.income)
+  // 各年の取崩し額（支出 - 収入、マイナスなら0）を計算
+  const annualWithdrawals = annualPlans.map((plan) =>
+    Math.max(0, plan.basicExpense + plan.extraExpense - plan.income)
+  )
 
-  if (annualWithdrawal === 0) return null
+  // 平均取崩し額を計算
+  const totalWithdrawal = annualWithdrawals.reduce((sum, w) => sum + w, 0)
+  const averageWithdrawal = totalWithdrawal / annualPlans.length
 
-  return Math.round((annualWithdrawal / initialAssets) * 1000) / 10
+  if (averageWithdrawal === 0) return null
+
+  return Math.round((averageWithdrawal / initialAssets) * 1000) / 10
 }
 
 /**

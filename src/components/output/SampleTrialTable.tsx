@@ -14,8 +14,11 @@ interface SampleTrialTableProps {
   trialResults: TrialResult[]
 }
 
-// 年次パスが中央値に最も近い試行を選択
-function selectMedianTrial(trialResults: TrialResult[]): TrialResult | null {
+/**
+ * 年次資産パスが中央値に最も近い試行を選択
+ * 各年の資産額と中央値パスとの二乗誤差が最小の試行を「代表的試行」として返す
+ */
+function selectRepresentativeTrial(trialResults: TrialResult[]): TrialResult | null {
   if (trialResults.length === 0) return null
 
   const numYears = trialResults[0].yearlyResults.length
@@ -76,13 +79,13 @@ function getRegimeClass(regime: string): string {
 }
 
 export function SampleTrialTable({ trialResults }: SampleTrialTableProps) {
-  const sampleTrial = selectMedianTrial(trialResults)
+  const sampleTrial = selectRepresentativeTrial(trialResults)
 
   if (!sampleTrial) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>サンプル試行詳細</CardTitle>
+          <CardTitle>代表的試行</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
@@ -97,7 +100,7 @@ export function SampleTrialTable({ trialResults }: SampleTrialTableProps) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>50%タイル試行</span>
+          <span>代表的試行</span>
           <span className="text-sm font-normal text-muted-foreground">
             暴落回数: {sampleTrial.crashCount}回
           </span>
@@ -160,7 +163,7 @@ export function SampleTrialTable({ trialResults }: SampleTrialTableProps) {
         </div>
         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-muted-foreground">
           <span>※金額の単位はすべて万円</span>
-          <span>※年次資産推移が50%タイルに最も近い試行を選択</span>
+          <span>※年次資産推移が中央値に最も近い試行を表示（暴落回数は試行により異なる場合あり）</span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-3 bg-red-100 dark:bg-red-900/30 border"></span>
             暴落期
