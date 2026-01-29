@@ -110,7 +110,7 @@ export function runSingleTrial(params: SimulationParams): TrialResult {
     const netIncome = plan.income - plan.basicExpense - plan.extraExpense
 
     // 4. 取崩し/積立
-    const isCrash = isCrashRegime(regimeState.current, regimeSettings)
+    const isCrash = isCrashRegime(regimeState.current)
     const result = processNetIncome(netIncome, balances, withdrawalPriority, isCrash, {
       cashLimit: initialAssets.cashLimit,
       bondsLimit: initialAssets.bondsLimit,

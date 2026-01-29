@@ -131,7 +131,7 @@ export function getStockReturn(regime: Regime, settings: RegimeSettings): number
  * 現在のレジームが暴落中または戻り期かどうかを判定
  * 暴落期・戻り期は株式を温存するため、現金・国債から取崩す
  */
-export function isCrashRegime(regime: Regime, _settings: RegimeSettings): boolean {
+export function isCrashRegime(regime: Regime): boolean {
   // 暴落期と戻り期は株式を温存する取崩し戦略を使用
   return regime === 'crash' || regime === 'recovery'
 }
