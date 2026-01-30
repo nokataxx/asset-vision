@@ -182,21 +182,33 @@ export function adjustRecoveryTargetForCashFlow(
   }
 }
 
+// 株式リターンの上限・下限（±40%）
+// 歴史的にS&P 500の年間リターンは最高+53%（1954年）、最低-43%（1931年）
+const STOCK_RETURN_MAX = 0.40
+const STOCK_RETURN_MIN = -0.40
+
 /**
  * レジームに応じた株式利回りを返す（t分布でランダム化）
  * t分布（自由度5）を使用し、正規分布より裾が厚い分布でファットテールを考慮
+ * リターンは±40%の範囲にクランプされる
  */
 export function getStockReturn(regime: Regime, settings: RegimeSettings): number {
+  let rawReturn: number
   switch (regime) {
     case 'normal':
-      return randomT(settings.normalReturn, settings.normalStdDev ?? 10, STOCK_RETURN_DF) / 100
+      rawReturn = randomT(settings.normalReturn, settings.normalStdDev ?? 10, STOCK_RETURN_DF) / 100
+      break
     case 'crash':
-      return randomT(settings.crashReturn, settings.crashStdDev ?? 15, STOCK_RETURN_DF) / 100
+      rawReturn = randomT(settings.crashReturn, settings.crashStdDev ?? 15, STOCK_RETURN_DF) / 100
+      break
     case 'recovery':
-      return randomT(settings.recoveryReturn, settings.recoveryStdDev ?? 12, STOCK_RETURN_DF) / 100
+      rawReturn = randomT(settings.recoveryReturn, settings.recoveryStdDev ?? 12, STOCK_RETURN_DF) / 100
+      break
     default:
       return 0
   }
+  // 上限・下限でクランプ
+  return Math.max(STOCK_RETURN_MIN, Math.min(STOCK_RETURN_MAX, rawReturn))
 }
 
 /**
