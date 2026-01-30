@@ -12,11 +12,12 @@ import { calculatePercentile } from '@/lib/simulation/statistics'
 
 interface SampleTrialTableProps {
   trialResults: TrialResult[]
+  initialTotalAssets: number
 }
 
 /**
  * 年次資産パスが中央値に最も近い試行を選択
- * 各年の資産額と中央値パスとの二乗誤差が最小の試行を「代表的試行」として返す
+ * 各年の資産額と中央値パスとの二乗誤差が最小の試行を「中央値シナリオ」として返す
  */
 function selectRepresentativeTrial(trialResults: TrialResult[]): TrialResult | null {
   if (trialResults.length === 0) return null
@@ -52,40 +53,35 @@ function selectRepresentativeTrial(trialResults: TrialResult[]): TrialResult | n
   return closestTrial
 }
 
-// レジームの日本語表示
-function getRegimeLabel(regime: string): string {
-  switch (regime) {
-    case 'normal':
-      return '通常'
-    case 'crash':
-      return '暴落'
-    case 'recovery':
-      return '戻り'
-    default:
-      return regime
-  }
+// 増減率を計算（前年比の変化率）- 数値を返す
+function calculateReturnRate(currentAssets: number, previousAssets: number): number | null {
+  if (previousAssets <= 0) return null
+  return ((currentAssets / previousAssets) - 1) * 100
 }
 
-// レジームに応じた背景色クラス
-function getRegimeClass(regime: string): string {
-  switch (regime) {
-    case 'crash':
-      return 'bg-red-100 dark:bg-red-900/30'
-    case 'recovery':
-      return 'bg-yellow-100 dark:bg-yellow-900/30'
-    default:
-      return ''
-  }
+// 増減率の表示文字列
+function formatReturnRate(rate: number | null): string {
+  if (rate === null) return '-'
+  const sign = rate >= 0 ? '+' : ''
+  return `${sign}${rate.toFixed(1)}%`
 }
 
-export function SampleTrialTable({ trialResults }: SampleTrialTableProps) {
+// 増減率に応じた背景色クラス
+function getReturnRateClass(rate: number | null): string {
+  if (rate === null) return ''
+  if (rate <= -10) return 'bg-red-100 dark:bg-red-900/30'
+  if (rate >= 10) return 'bg-green-100 dark:bg-green-900/30'
+  return ''
+}
+
+export function SampleTrialTable({ trialResults, initialTotalAssets }: SampleTrialTableProps) {
   const sampleTrial = selectRepresentativeTrial(trialResults)
 
   if (!sampleTrial) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>代表的試行</CardTitle>
+          <CardTitle>中央値シナリオ</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
@@ -100,7 +96,7 @@ export function SampleTrialTable({ trialResults }: SampleTrialTableProps) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>代表的試行</span>
+          <span>中央値シナリオ</span>
           <span className="text-sm font-normal text-muted-foreground">
             暴落回数: {sampleTrial.crashCount}回
           </span>
@@ -113,7 +109,6 @@ export function SampleTrialTable({ trialResults }: SampleTrialTableProps) {
               <TableRow>
                 <TableHead className="w-16">年</TableHead>
                 <TableHead className="w-16">年齢</TableHead>
-                <TableHead className="w-16">レジーム</TableHead>
                 <TableHead className="text-right">収入</TableHead>
                 <TableHead className="text-right">支出①</TableHead>
                 <TableHead className="text-right">支出②</TableHead>
@@ -121,16 +116,19 @@ export function SampleTrialTable({ trialResults }: SampleTrialTableProps) {
                 <TableHead className="text-right">国債</TableHead>
                 <TableHead className="text-right">株式</TableHead>
                 <TableHead className="text-right">合計</TableHead>
+                <TableHead className="text-right">増減率</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sampleTrial.yearlyResults.map((result) => (
-                <TableRow key={result.year} className={getRegimeClass(result.regime)}>
+              {sampleTrial.yearlyResults.map((result, index) => {
+                const previousAssets = index === 0
+                  ? initialTotalAssets
+                  : sampleTrial.yearlyResults[index - 1]?.totalAssets ?? 0
+                const returnRate = calculateReturnRate(result.totalAssets, previousAssets)
+                return (
+                <TableRow key={result.year} className={getReturnRateClass(returnRate)}>
                   <TableCell className="font-medium">{result.year}</TableCell>
                   <TableCell>{result.age}</TableCell>
-                  <TableCell className="font-medium">
-                    {getRegimeLabel(result.regime)}
-                  </TableCell>
                   <TableCell className="text-right">
                     {result.income.toLocaleString()}
                   </TableCell>
@@ -156,21 +154,25 @@ export function SampleTrialTable({ trialResults }: SampleTrialTableProps) {
                   >
                     {Math.round(result.totalAssets).toLocaleString()}
                   </TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    {formatReturnRate(returnRate)}
+                  </TableCell>
                 </TableRow>
-              ))}
+              )
+              })}
             </TableBody>
           </Table>
         </div>
         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-muted-foreground">
           <span>※金額の単位はすべて万円</span>
-          <span>※年次資産推移が中央値に最も近い試行を表示（暴落回数は試行により異なる場合あり）</span>
+          <span>※年次資産推移が中央値に最も近い試行を表示</span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-3 bg-red-100 dark:bg-red-900/30 border"></span>
-            暴落期
+            増減率 -10%以下
           </span>
           <span className="flex items-center gap-1">
-            <span className="inline-block w-3 h-3 bg-yellow-100 dark:bg-yellow-900/30 border"></span>
-            戻り期
+            <span className="inline-block w-3 h-3 bg-green-100 dark:bg-green-900/30 border"></span>
+            増減率 +10%以上
           </span>
         </div>
       </CardContent>

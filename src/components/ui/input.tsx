@@ -2,9 +2,35 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+function Input({ className, type, ref, ...props }: React.ComponentProps<"input">) {
+  const inputRef = React.useRef<HTMLInputElement | null>(null);
+
+  React.useEffect(() => {
+    const element = inputRef.current;
+    if (type !== "number" || !element) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+    };
+
+    element.addEventListener("wheel", handleWheel, { passive: false });
+    return () => {
+      element.removeEventListener("wheel", handleWheel);
+    };
+  }, [type]);
+
+  const setRefs = (node: HTMLInputElement | null) => {
+    inputRef.current = node;
+    if (typeof ref === "function") {
+      ref(node);
+    } else if (ref) {
+      ref.current = node;
+    }
+  };
+
   return (
     <input
+      ref={setRefs}
       type={type}
       data-slot="input"
       className={cn(

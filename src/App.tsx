@@ -244,7 +244,10 @@ function App() {
           <AssetChart yearlyResults={simulationResult?.yearlyResults ?? []} />
           <SummaryMetrics metrics={simulationResult?.summary ?? null} />
           <YearlyResultTable yearlyResults={simulationResult?.yearlyResults ?? []} />
-          <SampleTrialTable trialResults={simulationResult?.trialResults ?? []} />
+          <SampleTrialTable
+            trialResults={simulationResult?.trialResults ?? []}
+            initialTotalAssets={assets.stocks + assets.bonds + assets.cash}
+          />
         </>
       }
     />
