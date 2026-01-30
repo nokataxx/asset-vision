@@ -45,6 +45,9 @@ export function runSingleTrial(params: SimulationParams): TrialResult {
   let crashCount = 0
   const yearlyResults: TrialYearResult[] = []
 
+  // 前年末の総資産（初年度は初期資産）
+  let previousTotalAssets = calculateTotalAssets(balances)
+
   for (const plan of annualPlans) {
     // 1. レジーム遷移の判定（年初、現在の株式残高を渡す）
     const previousRegime = regimeState.current
@@ -110,7 +113,14 @@ export function runSingleTrial(params: SimulationParams): TrialResult {
     const netIncome = plan.income - plan.basicExpense - plan.extraExpense
 
     // 4. 取崩し/積立
-    const isCrash = isCrashRegime(regimeState.current)
+    // 下落率を計算（リターン適用後、取崩し前）
+    const currentTotalAssets = calculateTotalAssets(balances)
+    const declineRate = previousTotalAssets > 0
+      ? ((currentTotalAssets - previousTotalAssets) / previousTotalAssets) * 100
+      : 0
+
+    // レジームが暴落期/戻り期、または下落率が閾値以下の場合は暴落時ルールを適用
+    const isCrash = isCrashRegime(regimeState.current) || declineRate <= withdrawalPriority.declineThreshold
     const result = processNetIncome(netIncome, balances, withdrawalPriority, isCrash, {
       cashLimit: initialAssets.cashLimit,
       bondsLimit: initialAssets.bondsLimit,
@@ -143,6 +153,9 @@ export function runSingleTrial(params: SimulationParams): TrialResult {
       extraExpense: plan.extraExpense,
       isDepleted: depleted,
     })
+
+    // 次年度のために今年の総資産を記録
+    previousTotalAssets = totalAssets
   }
 
   return {

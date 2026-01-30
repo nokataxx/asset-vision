@@ -1,15 +1,18 @@
 import { useMemo } from 'react'
-import { DEFAULT_REGIME_SETTINGS, type RegimeSettings } from '@/types'
+import { DEFAULT_REGIME_SETTINGS, DEFAULT_WITHDRAWAL_PRIORITY, type RegimeSettings, type WithdrawalPriority } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SpinInput } from '@/components/ui/spin-input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { RotateCcw } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { RotateCcw, HelpCircle } from 'lucide-react'
 import { VALIDATION_CONSTRAINTS, clampValue } from '@/lib/validation'
 
 interface RegimeSettingsInputProps {
   settings: RegimeSettings
   onChange: (settings: RegimeSettings) => void
+  withdrawalPriority: WithdrawalPriority
+  onWithdrawalPriorityChange: (priority: WithdrawalPriority) => void
 }
 
 /**
@@ -45,7 +48,7 @@ function calculateExpectedReturn(settings: RegimeSettings): number {
   )
 }
 
-export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputProps) {
+export function RegimeSettingsInput({ settings, onChange, withdrawalPriority, onWithdrawalPriorityChange }: RegimeSettingsInputProps) {
   const handleChange = (field: keyof RegimeSettings, value: string) => {
     onChange({ ...settings, [field]: parseFloat(value) || 0 })
   }
@@ -55,6 +58,26 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
     if (settings[field] !== clampedValue) {
       onChange({ ...settings, [field]: clampedValue })
     }
+  }
+
+  const handleDeclineThresholdChange = (value: string) => {
+    onWithdrawalPriorityChange({
+      ...withdrawalPriority,
+      declineThreshold: parseFloat(value) || 0,
+    })
+  }
+
+  const handleDeclineThresholdBlur = () => {
+    // 閾値は-100〜0の範囲にクランプ
+    const clamped = Math.max(-100, Math.min(0, withdrawalPriority.declineThreshold))
+    if (withdrawalPriority.declineThreshold !== clamped) {
+      onWithdrawalPriorityChange({ ...withdrawalPriority, declineThreshold: clamped })
+    }
+  }
+
+  const handleReset = () => {
+    onChange(DEFAULT_REGIME_SETTINGS)
+    onWithdrawalPriorityChange(DEFAULT_WITHDRAWAL_PRIORITY)
   }
 
   const expectedReturn = useMemo(() => calculateExpectedReturn(settings), [settings])
@@ -79,7 +102,7 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
         <Button
           variant="outline"
           size="sm"
-          onClick={() => onChange(DEFAULT_REGIME_SETTINGS)}
+          onClick={handleReset}
         >
           <RotateCcw className="h-4 w-4 mr-1" />
           初期値
@@ -208,7 +231,7 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
             </div>
           </div>
 
-          {/* 国債利回り */}
+          {/* 国債利回り・下落閾値 */}
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
               <Label htmlFor="bondReturn" className="text-sm">
@@ -223,6 +246,30 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 min={bondMin}
                 max={bondMax}
                 placeholder="1.2"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="declineThreshold" className="text-sm flex items-center gap-1">
+                下落閾値（%）
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[240px]">
+                    資産がこの率以下に下落したら、株式を温存して現金・国債から優先的に取り崩します
+                  </TooltipContent>
+                </Tooltip>
+              </Label>
+              <SpinInput
+                id="declineThreshold"
+                value={withdrawalPriority.declineThreshold || ''}
+                onChange={handleDeclineThresholdChange}
+                onBlur={handleDeclineThresholdBlur}
+                step={1}
+                min={-100}
+                max={0}
+                placeholder="-10"
               />
             </div>
           </div>

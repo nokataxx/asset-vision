@@ -20,6 +20,7 @@ import type {
   AnnualPlan,
   RegimeSettings,
   SimulationResult,
+  WithdrawalPriority,
 } from '@/types'
 import {
   DEFAULT_ASSETS,
@@ -38,6 +39,9 @@ function App() {
   const [annualPlans, setAnnualPlans] = useState<AnnualPlan[]>([])
   const [regimeSettings, setRegimeSettings] = useState<RegimeSettings>(
     DEFAULT_REGIME_SETTINGS
+  )
+  const [withdrawalPriority, setWithdrawalPriority] = useState<WithdrawalPriority>(
+    DEFAULT_WITHDRAWAL_PRIORITY
   )
 
   // シミュレーション結果
@@ -124,7 +128,7 @@ function App() {
           initialAssets: assets,
           annualPlans,
           regimeSettings,
-          withdrawalPriority: DEFAULT_WITHDRAWAL_PRIORITY,
+          withdrawalPriority,
         },
         1000
       )
@@ -151,6 +155,7 @@ function App() {
     setIncomeExpensePlan(DEFAULT_INCOME_EXPENSE_PLAN)
     setAnnualPlans([])
     setRegimeSettings(DEFAULT_REGIME_SETTINGS)
+    setWithdrawalPriority(DEFAULT_WITHDRAWAL_PRIORITY)
     setSimulationResult(null)
   }
 
@@ -194,6 +199,8 @@ function App() {
               <RegimeSettingsInput
                 settings={regimeSettings}
                 onChange={setRegimeSettings}
+                withdrawalPriority={withdrawalPriority}
+                onWithdrawalPriorityChange={setWithdrawalPriority}
               />
             </div>
           </div>

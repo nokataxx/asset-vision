@@ -44,6 +44,7 @@ export type AssetType = 'stocks' | 'bonds' | 'cash'
 export interface WithdrawalPriority {
   normal: AssetType[] // 通常時の優先順位
   crash: AssetType[] // 暴落時の優先順位
+  declineThreshold: number // 下落閾値（%）：この値以下の下落率で暴落時ルールを適用
 }
 
 // レジーム状態
@@ -146,6 +147,7 @@ export const DEFAULT_REGIME_SETTINGS: RegimeSettings = {
 export const DEFAULT_WITHDRAWAL_PRIORITY: WithdrawalPriority = {
   normal: ['stocks', 'cash', 'bonds'],
   crash: ['cash', 'bonds', 'stocks'],
+  declineThreshold: -10, // デフォルト: -10%以下で暴落時ルール適用
 }
 
 export const DEFAULT_INCOME_EXPENSE_PLAN: IncomeExpensePlan = {
