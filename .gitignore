@@ -33,6 +33,9 @@ ui-debug.log
 # Serena
 .serena/
 
+# Supabase
+supabase/.temp/
+
 # env files (all .env files contain secrets)
 .env
 .env*.local
