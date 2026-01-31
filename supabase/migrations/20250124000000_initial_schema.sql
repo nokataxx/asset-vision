@@ -1,15 +1,14 @@
 -- Asset Vision Database Schema
 -- Run this SQL in Supabase SQL Editor
 
--- Enable UUID extension (usually already enabled)
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- gen_random_uuid() is built-in to PostgreSQL 13+, no extension needed
 
 -- ============================================
 -- User Data Table (ユーザー設定データ)
 -- ============================================
 -- Stores the complete simulation configuration for each user
 CREATE TABLE IF NOT EXISTS user_simulation_data (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
 
   -- Asset data (資産データ)
@@ -118,7 +117,7 @@ CREATE TRIGGER trigger_user_simulation_data_updated_at
 -- ============================================
 -- Stores simulation results history (optional feature)
 CREATE TABLE IF NOT EXISTS simulation_history (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
 
   -- Simulation input snapshot

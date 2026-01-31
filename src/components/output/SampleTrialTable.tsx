@@ -1,4 +1,4 @@
-import type { TrialResult } from '@/types'
+import type { TrialResult, Regime } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
@@ -74,6 +74,20 @@ function getReturnRateClass(rate: number | null): string {
   return ''
 }
 
+// レジームの日本語表示
+const REGIME_LABELS: Record<Regime, string> = {
+  normal: '通常',
+  crash: '暴落',
+  recovery: '戻り',
+}
+
+// レジームの色クラス
+const REGIME_COLORS: Record<Regime, string> = {
+  normal: '',
+  crash: 'text-red-600',
+  recovery: 'text-green-600',
+}
+
 export function SampleTrialTable({ trialResults, initialTotalAssets }: SampleTrialTableProps) {
   const sampleTrial = selectRepresentativeTrial(trialResults)
 
@@ -109,6 +123,7 @@ export function SampleTrialTable({ trialResults, initialTotalAssets }: SampleTri
               <TableRow>
                 <TableHead className="w-16">年</TableHead>
                 <TableHead className="w-16">年齢</TableHead>
+                <TableHead className="w-16 text-center">レジーム</TableHead>
                 <TableHead className="text-right">収入</TableHead>
                 <TableHead className="text-right">支出①</TableHead>
                 <TableHead className="text-right">支出②</TableHead>
@@ -129,6 +144,9 @@ export function SampleTrialTable({ trialResults, initialTotalAssets }: SampleTri
                 <TableRow key={result.year} className={getReturnRateClass(returnRate)}>
                   <TableCell className="font-medium">{result.year}</TableCell>
                   <TableCell>{result.age}</TableCell>
+                  <TableCell className={`text-center font-medium ${REGIME_COLORS[result.regime]}`}>
+                    {REGIME_LABELS[result.regime]}
+                  </TableCell>
                   <TableCell className="text-right">
                     {result.income.toLocaleString()}
                   </TableCell>
