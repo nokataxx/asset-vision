@@ -1,6 +1,5 @@
 import { DEFAULT_ASSETS, DEFAULT_INCOME_EXPENSE_PLAN, type IncomeExpensePlan } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { SpinInput } from '@/components/ui/spin-input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -79,31 +78,30 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
           {/* 現在の年齢 */}
           <div className="space-y-2">
             <Label htmlFor="age">現在の年齢（歳）</Label>
-            <Input
+            <SpinInput
               id="age"
-              type="number"
+              value={age}
+              onChange={(value) => onAgeChange(parseInt(value) || 0)}
+              onBlur={handleAgeBlur}
+              step={1}
               min={ageMin}
               max={ageMax}
-              value={age}
-              onChange={(e) => onAgeChange(parseInt(e.target.value) || 0)}
-              onBlur={handleAgeBlur}
               placeholder="30"
             />
           </div>
         </div>
-
         <div className="grid grid-cols-2 gap-4">
           {/* 開始年 */}
           <div className="space-y-2">
             <Label htmlFor="startYear">開始年</Label>
-            <Input
+            <SpinInput
               id="startYear"
-              type="number"
+              value={plan.startYear}
+              onChange={(value) => handleIntChange('startYear', value)}
+              onBlur={handleStartYearBlur}
+              step={1}
               min={startYearMin}
               max={startYearMax}
-              value={plan.startYear}
-              onChange={(e) => handleIntChange('startYear', e.target.value)}
-              onBlur={handleStartYearBlur}
               placeholder={new Date().getFullYear().toString()}
             />
           </div>
@@ -111,14 +109,14 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
           {/* シミュレーション期間 */}
           <div className="space-y-2">
             <Label htmlFor="duration">期間（年）</Label>
-            <Input
+            <SpinInput
               id="duration"
-              type="number"
+              value={plan.duration}
+              onChange={(value) => handleIntChange('duration', value)}
+              onBlur={handleDurationBlur}
+              step={1}
               min={durationMin}
               max={durationMax}
-              value={plan.duration}
-              onChange={(e) => handleIntChange('duration', e.target.value)}
-              onBlur={handleDurationBlur}
               placeholder="30"
             />
           </div>
