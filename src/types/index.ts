@@ -35,6 +35,7 @@ export interface RegimeSettings {
   recoveryStdDev: number // 戻り期標準偏差（%）
   crashProbability: number // 暴落発生確率（%）
   bondReturn: number // 国債リターン（%）
+  withdrawalTaxRate: number // 取崩し時税率（%）- 株式・国債共通
 }
 
 // 資産タイプ
@@ -44,7 +45,6 @@ export type AssetType = 'stocks' | 'bonds' | 'cash'
 export interface WithdrawalPriority {
   normal: AssetType[] // 通常時の優先順位
   crash: AssetType[] // 暴落時の優先順位
-  declineThreshold: number // 下落閾値（%）：この値以下の下落率で暴落時ルールを適用
 }
 
 // レジーム状態
@@ -139,6 +139,7 @@ export const DEFAULT_REGIME_SETTINGS: RegimeSettings = {
   recoveryStdDev: 20,
   crashProbability: 13,
   bondReturn: 1.2,
+  withdrawalTaxRate: 10,
 }
 
 // 取崩し優先順位（固定ロジック）
@@ -147,7 +148,6 @@ export const DEFAULT_REGIME_SETTINGS: RegimeSettings = {
 export const DEFAULT_WITHDRAWAL_PRIORITY: WithdrawalPriority = {
   normal: ['stocks', 'cash', 'bonds'],
   crash: ['cash', 'bonds', 'stocks'],
-  declineThreshold: -10, // デフォルト: -10%以下で暴落時ルール適用
 }
 
 export const DEFAULT_INCOME_EXPENSE_PLAN: IncomeExpensePlan = {

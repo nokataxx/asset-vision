@@ -53,6 +53,11 @@ export const VALIDATION_CONSTRAINTS = {
     min: -10,
     max: 20,
   },
+  // 取崩し税率（%）
+  withdrawalTaxRate: {
+    min: 0,
+    max: 50,
+  },
   // 収入・支出（万円）
   incomeExpense: {
     min: 0,

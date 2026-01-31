@@ -1,7 +1,9 @@
-import type { Assets } from '@/types'
+import { DEFAULT_ASSETS, type Assets } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { RotateCcw } from 'lucide-react'
 import { VALIDATION_CONSTRAINTS, clampValue } from '@/lib/validation'
 
 interface AssetsInputProps {
@@ -26,13 +28,25 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
     }
   }
 
+  const handleReset = () => {
+    onChange(DEFAULT_ASSETS)
+  }
+
   const { min: assetMin, max: assetMax } = VALIDATION_CONSTRAINTS.assets
   const { min: limitMin, max: limitMax } = VALIDATION_CONSTRAINTS.assetLimit
 
   return (
     <Card className="h-full">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle>現在の資産</CardTitle>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleReset}
+        >
+          <RotateCcw className="h-4 w-4 mr-1" />
+          初期値
+        </Button>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* 株式（投資信託） */}
@@ -44,7 +58,7 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
               type="number"
               min={assetMin}
               max={assetMax}
-              value={assets.stocks || ''}
+              value={assets.stocks}
               onChange={(e) => handleAssetChange('stocks', e.target.value)}
               onBlur={() => handleAssetBlur('stocks')}
               placeholder="0"
@@ -61,7 +75,7 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
               type="number"
               min={assetMin}
               max={assetMax}
-              value={assets.bonds || ''}
+              value={assets.bonds}
               onChange={(e) => handleAssetChange('bonds', e.target.value)}
               onBlur={() => handleAssetBlur('bonds')}
               placeholder="0"
@@ -74,7 +88,7 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
               type="number"
               min={limitMin}
               max={limitMax}
-              value={assets.bondsLimit || ''}
+              value={assets.bondsLimit}
               onChange={(e) => handleAssetChange('bondsLimit', e.target.value)}
               onBlur={() => handleAssetBlur('bondsLimit', true)}
               placeholder="1000"
@@ -91,7 +105,7 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
               type="number"
               min={assetMin}
               max={assetMax}
-              value={assets.cash || ''}
+              value={assets.cash}
               onChange={(e) => handleAssetChange('cash', e.target.value)}
               onBlur={() => handleAssetBlur('cash')}
               placeholder="0"
@@ -104,7 +118,7 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
               type="number"
               min={limitMin}
               max={limitMax}
-              value={assets.cashLimit || ''}
+              value={assets.cashLimit}
               onChange={(e) => handleAssetChange('cashLimit', e.target.value)}
               onBlur={() => handleAssetBlur('cashLimit', true)}
               placeholder="500"

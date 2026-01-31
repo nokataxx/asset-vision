@@ -20,15 +20,13 @@ import type {
   AnnualPlan,
   RegimeSettings,
   SimulationResult,
-  WithdrawalPriority,
 } from '@/types'
 import {
   DEFAULT_ASSETS,
   DEFAULT_INCOME_EXPENSE_PLAN,
   DEFAULT_REGIME_SETTINGS,
-  DEFAULT_WITHDRAWAL_PRIORITY,
 } from '@/types'
-import { Play, Loader2, Cloud, HardDrive, RotateCcw } from 'lucide-react'
+import { Play, Loader2, Cloud, HardDrive } from 'lucide-react'
 
 function App() {
   // 入力状態
@@ -39,9 +37,6 @@ function App() {
   const [annualPlans, setAnnualPlans] = useState<AnnualPlan[]>([])
   const [regimeSettings, setRegimeSettings] = useState<RegimeSettings>(
     DEFAULT_REGIME_SETTINGS
-  )
-  const [withdrawalPriority, setWithdrawalPriority] = useState<WithdrawalPriority>(
-    DEFAULT_WITHDRAWAL_PRIORITY
   )
 
   // シミュレーション結果
@@ -128,7 +123,6 @@ function App() {
           initialAssets: assets,
           annualPlans,
           regimeSettings,
-          withdrawalPriority,
         },
         1000
       )
@@ -141,52 +135,23 @@ function App() {
     }
   }
 
-  // 設定をリセット
-  const handleResetSettings = () => {
-    if (!confirm('すべての設定をデフォルト値にリセットしますか？')) {
-      return
-    }
-
-    // ローカルストレージをクリア
-    localStorage.removeItem('asset-vision-data')
-
-    // 状態をデフォルト値にリセット
-    setAssets(DEFAULT_ASSETS)
-    setIncomeExpensePlan(DEFAULT_INCOME_EXPENSE_PLAN)
-    setAnnualPlans([])
-    setRegimeSettings(DEFAULT_REGIME_SETTINGS)
-    setWithdrawalPriority(DEFAULT_WITHDRAWAL_PRIORITY)
-    setSimulationResult(null)
-  }
-
   return (
     <MainLayout
       inputArea={
         <>
-          {/* 保存状態インジケーターとリセットボタン */}
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground ms-3">
-              {isAuthenticated ? (
-                <>
-                  <Cloud className="h-3 w-3" />
-                  <span>クラウドに自動保存</span>
-                </>
-              ) : (
-                <>
-                  <HardDrive className="h-3 w-3" />
-                  <span>ローカルに自動保存</span>
-                </>
-              )}
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleResetSettings}
-              className="text-xs h-7 px-2 text-muted-foreground hover:text-destructive"
-            >
-              <RotateCcw className="h-3 w-3 mr-1" />
-              設定をリセット
-            </Button>
+          {/* 保存状態インジケーター */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground ms-3 mb-2">
+            {isAuthenticated ? (
+              <>
+                <Cloud className="h-3 w-3" />
+                <span>クラウドに自動保存</span>
+              </>
+            ) : (
+              <>
+                <HardDrive className="h-3 w-3" />
+                <span>ローカルに自動保存</span>
+              </>
+            )}
           </div>
 
           {/* 1段目: 現在の資産とレジーム設定 (4:6) */}
@@ -199,8 +164,6 @@ function App() {
               <RegimeSettingsInput
                 settings={regimeSettings}
                 onChange={setRegimeSettings}
-                withdrawalPriority={withdrawalPriority}
-                onWithdrawalPriorityChange={setWithdrawalPriority}
               />
             </div>
           </div>

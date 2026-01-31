@@ -1,7 +1,8 @@
 import type { AnnualPlan } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { X, RotateCcw } from 'lucide-react'
 
 interface AnnualPlanTableProps {
   plans: AnnualPlan[]
@@ -56,10 +57,23 @@ export function AnnualPlanTable({
     onChange(newPlans)
   }
 
+  const handleReset = () => {
+    onChange([])
+  }
+
   return (
     <Card className="h-full">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle className="text-base">年次収支テーブル</CardTitle>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleReset}
+          disabled={plans.length === 0}
+        >
+          <RotateCcw className="h-4 w-4 mr-1" />
+          初期値
+        </Button>
       </CardHeader>
       <CardContent>
         {plans.length === 0 ? (

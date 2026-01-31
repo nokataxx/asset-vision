@@ -2,7 +2,6 @@ import type {
   Assets,
   AnnualPlan,
   RegimeSettings,
-  WithdrawalPriority,
   TrialResult,
   TrialYearResult,
 } from '@/types'
@@ -11,12 +10,13 @@ import {
   determineNextRegime,
   adjustRecoveryTargetForCashFlow,
   getStockReturn,
-  isCrashRegime,
   type RegimeState,
 } from './regime'
 import {
   type AssetBalances,
-  processNetIncome,
+  processCashFlow,
+  rebalanceExcessCash,
+  replenishCash,
   calculateTotalAssets,
   isDepleted,
 } from './withdrawal'
@@ -25,14 +25,13 @@ interface SimulationParams {
   initialAssets: Assets
   annualPlans: AnnualPlan[]
   regimeSettings: RegimeSettings
-  withdrawalPriority: WithdrawalPriority
 }
 
 /**
  * 1回のシミュレーション試行を実行
  */
 export function runSingleTrial(params: SimulationParams): TrialResult {
-  const { initialAssets, annualPlans, regimeSettings, withdrawalPriority } = params
+  const { initialAssets, annualPlans, regimeSettings } = params
 
   // 初期状態
   let balances: AssetBalances = {
@@ -49,7 +48,7 @@ export function runSingleTrial(params: SimulationParams): TrialResult {
   let previousTotalAssets = calculateTotalAssets(balances)
 
   for (const plan of annualPlans) {
-    // 1. レジーム遷移の判定（年初、現在の株式残高を渡す）
+    // 1. レジーム遷移の判定（年初）
     const previousRegime = regimeState.current
     regimeState = determineNextRegime(regimeState, regimeSettings, balances.stocks)
 
@@ -58,80 +57,53 @@ export function runSingleTrial(params: SimulationParams): TrialResult {
       crashCount++
     }
 
-    // 2. 資産の成長
-    // 国債のリターンを計算（常にプラス）
+    // 2. 収支処理（収入を現金に加算、支出を現金から減算、不足時は国債→株式から補填）
+    const expense = plan.basicExpense + plan.extraExpense
+    const cashFlowResult = processCashFlow(plan.income, expense, balances)
+    balances = cashFlowResult.balances
+
+    // 3. 資産の成長（利回り計算）
+    // 国債のリターンを国債に加算
     const bondGain = balances.bonds * (regimeSettings.bondReturn / 100)
-
-    // 国債リターンを現金→国債→株式の順で配分
-    if (bondGain > 0) {
-      let remainingBondGain = bondGain
-
-      // 1. 現金を上限まで補充
-      const cashRoomForBonds = Math.max(0, initialAssets.cashLimit - balances.cash)
-      const toCashFromBonds = Math.min(remainingBondGain, cashRoomForBonds)
-      balances.cash += toCashFromBonds
-      remainingBondGain -= toCashFromBonds
-
-      // 2. 国債を上限まで補充
-      const bondsRoomForBonds = Math.max(0, initialAssets.bondsLimit - balances.bonds)
-      const toBondsFromBonds = Math.min(remainingBondGain, bondsRoomForBonds)
-      balances.bonds += toBondsFromBonds
-      remainingBondGain -= toBondsFromBonds
-
-      // 3. 残りは株式へ
-      balances.stocks += remainingBondGain
-    }
+    balances.bonds += bondGain
 
     // 株式のリターンを計算
     const stockReturn = getStockReturn(regimeState.current, regimeSettings)
     const stockGain = balances.stocks * stockReturn
 
-    // 株式リターンを処理
-    if (stockGain > 0) {
-      let remainingStockGain = stockGain
-
-      // 1. 現金を上限まで補充
-      const cashRoomForStocks = Math.max(0, initialAssets.cashLimit - balances.cash)
-      const toCashFromStocks = Math.min(remainingStockGain, cashRoomForStocks)
-      balances.cash += toCashFromStocks
-      remainingStockGain -= toCashFromStocks
-
-      // 2. 国債を上限まで補充
-      const bondsRoomForStocks = Math.max(0, initialAssets.bondsLimit - balances.bonds)
-      const toBondsFromStocks = Math.min(remainingStockGain, bondsRoomForStocks)
-      balances.bonds += toBondsFromStocks
-      remainingStockGain -= toBondsFromStocks
-
-      // 3. 残りは株式に加算
-      balances.stocks += remainingStockGain
+    // 株式リターンがプラスで国債が上限未達の場合、国債に優先的に積立
+    if (stockGain > 0 && balances.bonds < initialAssets.bondsLimit) {
+      const bondsRoom = initialAssets.bondsLimit - balances.bonds
+      const toBonds = Math.min(stockGain, bondsRoom)
+      balances.bonds += toBonds
+      balances.stocks += stockGain - toBonds
     } else {
-      // 損失の場合は株式から減算
+      // マイナスまたは国債が上限以上の場合は株式に加算
       balances.stocks += stockGain
     }
 
-    // 3. 収支の計算
-    const netIncome = plan.income - plan.basicExpense - plan.extraExpense
+    // 4. 年末リバランス（現金超過分を国債→株式へ）
+    balances = rebalanceExcessCash(
+      balances,
+      initialAssets.cashLimit,
+      initialAssets.bondsLimit
+    )
 
-    // 4. 取崩し/積立
-    // 下落率を計算（リターン適用後、取崩し前）
+    // 5. 現金が上限未満の場合、補填元を下落率で決定
     const currentTotalAssets = calculateTotalAssets(balances)
     const declineRate = previousTotalAssets > 0
       ? ((currentTotalAssets - previousTotalAssets) / previousTotalAssets) * 100
       : 0
 
-    // レジームが暴落期/戻り期、または下落率が閾値以下の場合は暴落時ルールを適用
-    const isCrash = isCrashRegime(regimeState.current) || declineRate <= withdrawalPriority.declineThreshold
-    const result = processNetIncome(netIncome, balances, withdrawalPriority, isCrash, {
-      cashLimit: initialAssets.cashLimit,
-      bondsLimit: initialAssets.bondsLimit,
-    })
-    balances = result.balances
+    // 下落率が0以下（資産減少または変化なし）なら国債から、プラス（資産増加）なら株式から補填
+    const fromBonds = declineRate <= 0
+    balances = replenishCash(balances, initialAssets.cashLimit, fromBonds, regimeSettings.withdrawalTaxRate)
 
-    // 4.5. 暴落期・戻り期中は収支を考慮して回復目標を調整
-    // 赤字の場合は回復目標が下がる（収支分だけ回復しなくて良い）
+    // 暴落期・戻り期中は収支を考慮して回復目標を調整
+    const netIncome = plan.income - expense
     regimeState = adjustRecoveryTargetForCashFlow(regimeState, netIncome)
 
-    // 5. 枯渇判定
+    // 6. 枯渇判定
     const totalAssets = calculateTotalAssets(balances)
     const depleted = isDepleted(balances)
 

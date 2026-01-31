@@ -1,5 +1,3 @@
-import type { AssetType, WithdrawalPriority } from '@/types'
-
 export interface AssetBalances {
   stocks: number
   bonds: number
@@ -12,81 +10,135 @@ export interface WithdrawalResult {
 }
 
 /**
- * 優先順位に従って資産から取崩す
+ * 収支を現金で処理し、マイナス時は国債→株式から補填
+ * @param income 収入
+ * @param expense 支出
+ * @param balances 現在の資産残高
  */
-export function withdraw(
-  amount: number,
-  balances: AssetBalances,
-  priority: AssetType[]
+export function processCashFlow(
+  income: number,
+  expense: number,
+  balances: AssetBalances
 ): WithdrawalResult {
-  let remaining = amount
   const newBalances = { ...balances }
 
-  for (const assetType of priority) {
-    if (remaining <= 0) break
+  // 1. 収入を現金に加算
+  newBalances.cash += income
 
-    const available = newBalances[assetType]
-    const withdrawal = Math.min(available, remaining)
+  // 2. 支出を現金から減算
+  newBalances.cash -= expense
 
-    newBalances[assetType] = available - withdrawal
-    remaining -= withdrawal
+  // 3. 現金がマイナスなら国債→株式の順で補填
+  let shortfall = 0
+  if (newBalances.cash < 0) {
+    const deficit = -newBalances.cash
+    newBalances.cash = 0
+
+    // 国債から補填
+    const fromBonds = Math.min(newBalances.bonds, deficit)
+    newBalances.bonds -= fromBonds
+    let remaining = deficit - fromBonds
+
+    // 国債で足りなければ株式から補填
+    if (remaining > 0) {
+      const fromStocks = Math.min(newBalances.stocks, remaining)
+      newBalances.stocks -= fromStocks
+      remaining -= fromStocks
+    }
+
+    shortfall = remaining
   }
 
   return {
     balances: newBalances,
-    shortfall: remaining,
+    shortfall,
   }
 }
 
 /**
- * 収支に応じて資産を取崩しまたは積立
- * @param netIncome 純収入（収入 - 支出）。マイナスなら取崩し、プラスなら積立
+ * 現金の超過分を国債→株式にリバランス
  * @param balances 現在の資産残高
- * @param priority 取崩し時の優先順位
- * @param isCrash 暴落中かどうか（取崩し優先順位の選択に使用）
- * @param withdrawalPriority 取崩し優先順位設定
+ * @param cashLimit 現金の上限
+ * @param bondsLimit 国債の上限
  */
-export function processNetIncome(
-  netIncome: number,
+export function rebalanceExcessCash(
   balances: AssetBalances,
-  withdrawalPriority: WithdrawalPriority,
-  isCrash: boolean,
-  limits?: { cashLimit: number; bondsLimit: number }
-): WithdrawalResult {
-  if (netIncome >= 0) {
-    // 収支がプラス → 現金→国債→株式の順で上限を守って積立
-    let remaining = netIncome
-    const newBalances = { ...balances }
+  cashLimit: number,
+  bondsLimit: number
+): AssetBalances {
+  const newBalances = { ...balances }
 
-    if (limits) {
-      // 1. 現金を上限まで
-      const cashRoom = Math.max(0, limits.cashLimit - newBalances.cash)
-      const toCash = Math.min(remaining, cashRoom)
-      newBalances.cash += toCash
-      remaining -= toCash
+  // 現金が上限を超えている場合
+  if (newBalances.cash > cashLimit) {
+    const excess = newBalances.cash - cashLimit
+    newBalances.cash = cashLimit
 
-      // 2. 国債を上限まで
-      const bondsRoom = Math.max(0, limits.bondsLimit - newBalances.bonds)
-      const toBonds = Math.min(remaining, bondsRoom)
-      newBalances.bonds += toBonds
-      remaining -= toBonds
+    // 国債が上限に達していなければ国債へ
+    const bondsRoom = Math.max(0, bondsLimit - newBalances.bonds)
+    const toBonds = Math.min(excess, bondsRoom)
+    newBalances.bonds += toBonds
 
-      // 3. 残りは株式へ
-      newBalances.stocks += remaining
+    // 残りは株式へ
+    const toStocks = excess - toBonds
+    newBalances.stocks += toStocks
+  }
+
+  return newBalances
+}
+
+/**
+ * 現金が上限未満の場合、国債または株式から補填
+ * @param balances 現在の資産残高
+ * @param cashLimit 現金の上限
+ * @param fromBonds trueなら国債から、falseなら株式から優先的に補填
+ */
+export function replenishCash(
+  balances: AssetBalances,
+  cashLimit: number,
+  fromBonds: boolean,
+  taxRate: number = 0 // 取崩し時税率（0-100の%）
+): AssetBalances {
+  const newBalances = { ...balances }
+  const taxMultiplier = 1 + taxRate / 100 // 例: 税率20%なら1.2
+
+  // 現金が上限未満の場合
+  if (newBalances.cash < cashLimit) {
+    const deficit = cashLimit - newBalances.cash
+
+    if (fromBonds) {
+      // 国債から優先的に補填（税金分を余分に取り崩す）
+      const neededFromBonds = Math.min(newBalances.bonds, deficit * taxMultiplier)
+      const actualToCash = neededFromBonds / taxMultiplier
+      newBalances.bonds -= neededFromBonds
+      newBalances.cash += actualToCash
+
+      // 国債で足りなければ株式から
+      const remaining = deficit - actualToCash
+      if (remaining > 0) {
+        const neededFromStocks = Math.min(newBalances.stocks, remaining * taxMultiplier)
+        const actualFromStocks = neededFromStocks / taxMultiplier
+        newBalances.stocks -= neededFromStocks
+        newBalances.cash += actualFromStocks
+      }
     } else {
-      // 上限がない場合は現金に積立（後方互換性のため）
-      newBalances.cash += netIncome
-    }
+      // 株式から優先的に補填（税金分を余分に取り崩す）
+      const neededFromStocks = Math.min(newBalances.stocks, deficit * taxMultiplier)
+      const actualToCash = neededFromStocks / taxMultiplier
+      newBalances.stocks -= neededFromStocks
+      newBalances.cash += actualToCash
 
-    return {
-      balances: newBalances,
-      shortfall: 0,
+      // 株式で足りなければ国債から
+      const remaining = deficit - actualToCash
+      if (remaining > 0) {
+        const neededFromBonds = Math.min(newBalances.bonds, remaining * taxMultiplier)
+        const actualFromBonds = neededFromBonds / taxMultiplier
+        newBalances.bonds -= neededFromBonds
+        newBalances.cash += actualFromBonds
+      }
     }
   }
 
-  // 収支がマイナス → 取崩し
-  const priority = isCrash ? withdrawalPriority.crash : withdrawalPriority.normal
-  return withdraw(-netIncome, balances, priority)
+  return newBalances
 }
 
 /**

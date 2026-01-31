@@ -1,18 +1,15 @@
 import { useMemo } from 'react'
-import { DEFAULT_REGIME_SETTINGS, DEFAULT_WITHDRAWAL_PRIORITY, type RegimeSettings, type WithdrawalPriority } from '@/types'
+import { DEFAULT_REGIME_SETTINGS, type RegimeSettings } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SpinInput } from '@/components/ui/spin-input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { RotateCcw, HelpCircle } from 'lucide-react'
+import { RotateCcw } from 'lucide-react'
 import { VALIDATION_CONSTRAINTS, clampValue } from '@/lib/validation'
 
 interface RegimeSettingsInputProps {
   settings: RegimeSettings
   onChange: (settings: RegimeSettings) => void
-  withdrawalPriority: WithdrawalPriority
-  onWithdrawalPriorityChange: (priority: WithdrawalPriority) => void
 }
 
 /**
@@ -48,36 +45,20 @@ function calculateExpectedReturn(settings: RegimeSettings): number {
   )
 }
 
-export function RegimeSettingsInput({ settings, onChange, withdrawalPriority, onWithdrawalPriorityChange }: RegimeSettingsInputProps) {
+export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputProps) {
   const handleChange = (field: keyof RegimeSettings, value: string) => {
     onChange({ ...settings, [field]: parseFloat(value) || 0 })
   }
 
-  const handleBlur = (field: keyof RegimeSettings, constraint: 'regimeReturn' | 'stdDev' | 'probability' | 'bondReturn') => {
+  const handleBlur = (field: keyof RegimeSettings, constraint: 'regimeReturn' | 'stdDev' | 'probability' | 'bondReturn' | 'withdrawalTaxRate') => {
     const clampedValue = clampValue(settings[field], constraint)
     if (settings[field] !== clampedValue) {
       onChange({ ...settings, [field]: clampedValue })
     }
   }
 
-  const handleDeclineThresholdChange = (value: string) => {
-    onWithdrawalPriorityChange({
-      ...withdrawalPriority,
-      declineThreshold: parseFloat(value) || 0,
-    })
-  }
-
-  const handleDeclineThresholdBlur = () => {
-    // 閾値は-100〜0の範囲にクランプ
-    const clamped = Math.max(-100, Math.min(0, withdrawalPriority.declineThreshold))
-    if (withdrawalPriority.declineThreshold !== clamped) {
-      onWithdrawalPriorityChange({ ...withdrawalPriority, declineThreshold: clamped })
-    }
-  }
-
   const handleReset = () => {
     onChange(DEFAULT_REGIME_SETTINGS)
-    onWithdrawalPriorityChange(DEFAULT_WITHDRAWAL_PRIORITY)
   }
 
   const expectedReturn = useMemo(() => calculateExpectedReturn(settings), [settings])
@@ -86,6 +67,7 @@ export function RegimeSettingsInput({ settings, onChange, withdrawalPriority, on
   const { min: stdMin, max: stdMax } = VALIDATION_CONSTRAINTS.stdDev
   const { min: probMin, max: probMax } = VALIDATION_CONSTRAINTS.probability
   const { min: bondMin, max: bondMax } = VALIDATION_CONSTRAINTS.bondReturn
+  const { min: taxMin, max: taxMax } = VALIDATION_CONSTRAINTS.withdrawalTaxRate
 
   return (
     <Card className="h-full">
@@ -118,7 +100,7 @@ export function RegimeSettingsInput({ settings, onChange, withdrawalPriority, on
               </Label>
               <SpinInput
                 id="normalReturn"
-                value={settings.normalReturn || ''}
+                value={settings.normalReturn}
                 onChange={(value) => handleChange('normalReturn', value)}
                 onBlur={() => handleBlur('normalReturn', 'regimeReturn')}
                 step={0.5}
@@ -134,7 +116,7 @@ export function RegimeSettingsInput({ settings, onChange, withdrawalPriority, on
               </Label>
               <SpinInput
                 id="normalStdDev"
-                value={settings.normalStdDev || ''}
+                value={settings.normalStdDev}
                 onChange={(value) => handleChange('normalStdDev', value)}
                 onBlur={() => handleBlur('normalStdDev', 'stdDev')}
                 step={0.5}
@@ -153,7 +135,7 @@ export function RegimeSettingsInput({ settings, onChange, withdrawalPriority, on
               </Label>
               <SpinInput
                 id="crashReturn"
-                value={settings.crashReturn || ''}
+                value={settings.crashReturn}
                 onChange={(value) => handleChange('crashReturn', value)}
                 onBlur={() => handleBlur('crashReturn', 'regimeReturn')}
                 step={1}
@@ -169,7 +151,7 @@ export function RegimeSettingsInput({ settings, onChange, withdrawalPriority, on
               </Label>
               <SpinInput
                 id="crashStdDev"
-                value={settings.crashStdDev || ''}
+                value={settings.crashStdDev}
                 onChange={(value) => handleChange('crashStdDev', value)}
                 onBlur={() => handleBlur('crashStdDev', 'stdDev')}
                 step={0.5}
@@ -185,7 +167,7 @@ export function RegimeSettingsInput({ settings, onChange, withdrawalPriority, on
               </Label>
               <SpinInput
                 id="crashProbability"
-                value={settings.crashProbability || ''}
+                value={settings.crashProbability}
                 onChange={(value) => handleChange('crashProbability', value)}
                 onBlur={() => handleBlur('crashProbability', 'probability')}
                 step={1}
@@ -204,7 +186,7 @@ export function RegimeSettingsInput({ settings, onChange, withdrawalPriority, on
               </Label>
               <SpinInput
                 id="recoveryReturn"
-                value={settings.recoveryReturn || ''}
+                value={settings.recoveryReturn}
                 onChange={(value) => handleChange('recoveryReturn', value)}
                 onBlur={() => handleBlur('recoveryReturn', 'regimeReturn')}
                 step={1}
@@ -220,7 +202,7 @@ export function RegimeSettingsInput({ settings, onChange, withdrawalPriority, on
               </Label>
               <SpinInput
                 id="recoveryStdDev"
-                value={settings.recoveryStdDev || ''}
+                value={settings.recoveryStdDev}
                 onChange={(value) => handleChange('recoveryStdDev', value)}
                 onBlur={() => handleBlur('recoveryStdDev', 'stdDev')}
                 step={0.5}
@@ -231,7 +213,7 @@ export function RegimeSettingsInput({ settings, onChange, withdrawalPriority, on
             </div>
           </div>
 
-          {/* 国債利回り・下落閾値 */}
+          {/* 国債利回り・税率 */}
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
               <Label htmlFor="bondReturn" className="text-sm">
@@ -239,7 +221,7 @@ export function RegimeSettingsInput({ settings, onChange, withdrawalPriority, on
               </Label>
               <SpinInput
                 id="bondReturn"
-                value={settings.bondReturn || ''}
+                value={settings.bondReturn}
                 onChange={(value) => handleChange('bondReturn', value)}
                 onBlur={() => handleBlur('bondReturn', 'bondReturn')}
                 step={0.1}
@@ -250,26 +232,18 @@ export function RegimeSettingsInput({ settings, onChange, withdrawalPriority, on
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="declineThreshold" className="text-sm flex items-center gap-1">
-                下落閾値（%）
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-[240px]">
-                    資産がこの率以下に下落したら、株式を温存して現金・国債から優先的に取り崩します
-                  </TooltipContent>
-                </Tooltip>
+              <Label htmlFor="withdrawalTaxRate" className="text-sm">
+                税率（%）
               </Label>
               <SpinInput
-                id="declineThreshold"
-                value={withdrawalPriority.declineThreshold || ''}
-                onChange={handleDeclineThresholdChange}
-                onBlur={handleDeclineThresholdBlur}
+                id="withdrawalTaxRate"
+                value={settings.withdrawalTaxRate}
+                onChange={(value) => handleChange('withdrawalTaxRate', value)}
+                onBlur={() => handleBlur('withdrawalTaxRate', 'withdrawalTaxRate')}
                 step={1}
-                min={-100}
-                max={0}
-                placeholder="-10"
+                min={taxMin}
+                max={taxMax}
+                placeholder="10"
               />
             </div>
           </div>

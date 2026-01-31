@@ -1,8 +1,10 @@
-import type { IncomeExpensePlan } from '@/types'
+import { DEFAULT_ASSETS, DEFAULT_INCOME_EXPENSE_PLAN, type IncomeExpensePlan } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { SpinInput } from '@/components/ui/spin-input'
 import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { RotateCcw } from 'lucide-react'
 import { VALIDATION_CONSTRAINTS, clampValue } from '@/lib/validation'
 
 interface IncomeExpenseSettingsProps {
@@ -49,6 +51,11 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
     }
   }
 
+  const handleReset = () => {
+    onChange(DEFAULT_INCOME_EXPENSE_PLAN)
+    onAgeChange(DEFAULT_ASSETS.age)
+  }
+
   const { min: ageMin, max: ageMax } = VALIDATION_CONSTRAINTS.age
   const { min: durationMin, max: durationMax } = VALIDATION_CONSTRAINTS.duration
   const { min: startYearMin, max: startYearMax } = VALIDATION_CONSTRAINTS.startYear
@@ -56,8 +63,16 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
 
   return (
     <Card className="h-full">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle>収支計画</CardTitle>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleReset}
+        >
+          <RotateCcw className="h-4 w-4 mr-1" />
+          初期値
+        </Button>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
@@ -69,7 +84,7 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
               type="number"
               min={ageMin}
               max={ageMax}
-              value={age || ''}
+              value={age}
               onChange={(e) => onAgeChange(parseInt(e.target.value) || 0)}
               onBlur={handleAgeBlur}
               placeholder="30"
@@ -86,7 +101,7 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
               type="number"
               min={startYearMin}
               max={startYearMax}
-              value={plan.startYear || ''}
+              value={plan.startYear}
               onChange={(e) => handleIntChange('startYear', e.target.value)}
               onBlur={handleStartYearBlur}
               placeholder={new Date().getFullYear().toString()}
@@ -101,7 +116,7 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
               type="number"
               min={durationMin}
               max={durationMax}
-              value={plan.duration || ''}
+              value={plan.duration}
               onChange={(e) => handleIntChange('duration', e.target.value)}
               onBlur={handleDurationBlur}
               placeholder="30"
@@ -115,7 +130,7 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
             <Label htmlFor="incomeGrowthRate">収入成長率（%）</Label>
             <SpinInput
               id="incomeGrowthRate"
-              value={plan.incomeGrowthRate || ''}
+              value={plan.incomeGrowthRate}
               onChange={(value) => handleFloatChange('incomeGrowthRate', value)}
               onBlur={() => handleGrowthRateBlur('incomeGrowthRate')}
               step={0.5}
@@ -130,7 +145,7 @@ export function IncomeExpenseSettings({ plan, onChange, age, onAgeChange }: Inco
             <Label htmlFor="expenseGrowthRate">生活費成長率（%）</Label>
             <SpinInput
               id="expenseGrowthRate"
-              value={plan.expenseGrowthRate || ''}
+              value={plan.expenseGrowthRate}
               onChange={(value) => handleFloatChange('expenseGrowthRate', value)}
               onBlur={() => handleGrowthRateBlur('expenseGrowthRate')}
               step={0.5}
