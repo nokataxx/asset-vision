@@ -64,7 +64,7 @@ export function SignUpDialog({ open, onOpenChange, onSwitchToLogin }: SignUpDial
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-gray-900">新規登録</DialogTitle>
           <DialogDescription className="text-xs text-gray-600 mb-1">
