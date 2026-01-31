@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { LoginDialog } from '@/components/auth/LoginDialog'
 import { SignUpDialog } from '@/components/auth/SignUpDialog'
-import { LogOut, User } from 'lucide-react'
+import { LogIn, LogOut, User } from 'lucide-react'
 
 export function Header() {
   const { user, signOut } = useAuth()
@@ -49,6 +49,7 @@ export function Header() {
               size="sm"
               onClick={() => setLoginOpen(true)}
             >
+              <LogIn className="h-4 w-4" />
               ログイン
             </Button>
           )}

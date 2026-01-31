@@ -65,15 +65,15 @@ export function LoginDialog({ open, onOpenChange, onSwitchToSignUp }: LoginDialo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>ログイン</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-xl font-semibold text-gray-900">ログイン</DialogTitle>
+          <DialogDescription className="text-xs text-gray-600 mb-1">
             メールアドレスとパスワードでログインしてください
           </DialogDescription>
         </DialogHeader>
 
         {resetSent ? (
           <div className="text-center py-4">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               パスワードリセット用のメールを送信しました。メールをご確認ください。
             </p>
             <Button
@@ -87,7 +87,7 @@ export function LoginDialog({ open, onOpenChange, onSwitchToSignUp }: LoginDialo
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">メールアドレス</Label>
+              <Label htmlFor="email" className="text-xs mb-1">メールアドレス</Label>
               <Input
                 id="email"
                 type="email"
@@ -99,10 +99,11 @@ export function LoginDialog({ open, onOpenChange, onSwitchToSignUp }: LoginDialo
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">パスワード</Label>
+              <Label htmlFor="password" className="text-xs mb-1">パスワード</Label>
               <Input
                 id="password"
                 type="password"
+                className="mb-1"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="パスワード"
@@ -111,7 +112,7 @@ export function LoginDialog({ open, onOpenChange, onSwitchToSignUp }: LoginDialo
             </div>
 
             {error && (
-              <p className="text-sm text-destructive">{error}</p>
+              <p className="text-xs text-destructive">{error}</p>
             )}
 
             <div className="flex flex-col gap-2">
@@ -119,11 +120,11 @@ export function LoginDialog({ open, onOpenChange, onSwitchToSignUp }: LoginDialo
                 {loading ? 'ログイン中...' : 'ログイン'}
               </Button>
 
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between">
                 <Button
                   type="button"
                   variant="link"
-                  className="p-0 h-auto"
+                  className="p-0 h-auto text-xs"
                   onClick={handleResetPassword}
                   disabled={loading}
                 >
@@ -133,7 +134,7 @@ export function LoginDialog({ open, onOpenChange, onSwitchToSignUp }: LoginDialo
                 <Button
                   type="button"
                   variant="link"
-                  className="p-0 h-auto"
+                  className="p-0 h-auto text-xs"
                   onClick={onSwitchToSignUp}
                 >
                   新規登録

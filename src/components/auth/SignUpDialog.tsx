@@ -66,15 +66,15 @@ export function SignUpDialog({ open, onOpenChange, onSwitchToLogin }: SignUpDial
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>新規登録</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-xl font-semibold text-gray-900">新規登録</DialogTitle>
+          <DialogDescription className="text-xs text-gray-600 mb-1">
             アカウントを作成してデータを保存できるようにしましょう
           </DialogDescription>
         </DialogHeader>
 
         {success ? (
           <div className="text-center py-4">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               確認メールを送信しました。メールのリンクをクリックして登録を完了してください。
             </p>
             <Button
@@ -88,7 +88,7 @@ export function SignUpDialog({ open, onOpenChange, onSwitchToLogin }: SignUpDial
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="signup-email">メールアドレス</Label>
+              <Label htmlFor="signup-email" className="text-xs mb-1">メールアドレス</Label>
               <Input
                 id="signup-email"
                 type="email"
@@ -100,7 +100,7 @@ export function SignUpDialog({ open, onOpenChange, onSwitchToLogin }: SignUpDial
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="signup-password">パスワード</Label>
+              <Label htmlFor="signup-password" className="text-xs mb-1">パスワード</Label>
               <Input
                 id="signup-password"
                 type="password"
@@ -112,10 +112,11 @@ export function SignUpDialog({ open, onOpenChange, onSwitchToLogin }: SignUpDial
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirm-password">パスワード（確認）</Label>
+              <Label htmlFor="confirm-password" className="text-xs mb-1">パスワード（確認）</Label>
               <Input
                 id="confirm-password"
                 type="password"
+                className="mb-2"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="パスワードを再入力"
@@ -132,12 +133,12 @@ export function SignUpDialog({ open, onOpenChange, onSwitchToLogin }: SignUpDial
                 {loading ? '登録中...' : '登録'}
               </Button>
 
-              <div className="text-center text-sm">
+              <div className="text-center text-xs">
                 <span className="text-muted-foreground">すでにアカウントをお持ちの方は</span>
                 <Button
                   type="button"
                   variant="link"
-                  className="p-0 h-auto ml-1"
+                  className="p-0 h-auto ml-1 text-xs"
                   onClick={onSwitchToLogin}
                 >
                   ログイン
