@@ -6,6 +6,7 @@ export interface Assets {
   cashLimit: number // 現金上限（万円）
   bondsLimit: number // 国債上限（万円）
   age: number // 年齢
+  foreignRatio: number // 外貨建て比率（%）
 }
 
 // 収支計画の基本設定
@@ -166,4 +167,5 @@ export const DEFAULT_ASSETS: Assets = {
   cashLimit: 500,
   bondsLimit: 1000,
   age: 30,
+  foreignRatio: 0,
 }

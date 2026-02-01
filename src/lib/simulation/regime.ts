@@ -234,3 +234,49 @@ export function isCrashRegime(regime: Regime): boolean {
   // 暴落期と戻り期は株式を温存する取崩し戦略を使用
   return regime === 'crash' || regime === 'recovery'
 }
+
+
+// 為替パラメータ（内部固定値）
+const FX_PARAMS = {
+  normal: { mean: 0, stdDev: 8 },    // 中立
+  crash: { mean: -10, stdDev: 10 },  // 円高（リスクオフ）
+  recovery: { mean: 5, stdDev: 8 },  // 円安（リスクオン）
+} as const
+
+/**
+ * レジームに応じた為替リターンを生成
+ * @param regime 現在のレジーム
+ * @returns 為替変動率（例: 0.05 = 5%円安）
+ */
+export function getFxReturn(regime: Regime): number {
+  const params = FX_PARAMS[regime]
+  return randomStandardNormal() * (params.stdDev / 100) + (params.mean / 100)
+}
+
+/**
+ * 外貨建て比率を考慮した円建て株式リターンを計算
+ * @param regime 現在のレジーム
+ * @param baseReturn 株式の基本リターン（ローカル通貨建て）
+ * @param foreignRatio 外貨建て比率（0-100の%値）
+ * @returns 円建て実質リターン
+ */
+export function getEffectiveStockReturn(
+  regime: Regime,
+  baseReturn: number,
+  foreignRatio: number
+): number {
+  if (foreignRatio <= 0) {
+    return baseReturn
+  }
+
+  const ratio = foreignRatio / 100
+  const fxReturn = getFxReturn(regime)
+
+  // 国内部分 = (1 - foreignRatio) × stockReturn
+  const domesticPart = (1 - ratio) * baseReturn
+
+  // 外貨部分 = foreignRatio × ((1 + stockReturn) × (1 + fxReturn) - 1)
+  const foreignPart = ratio * ((1 + baseReturn) * (1 + fxReturn) - 1)
+
+  return domesticPart + foreignPart
+}

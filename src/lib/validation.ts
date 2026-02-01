@@ -63,6 +63,11 @@ export const VALIDATION_CONSTRAINTS = {
     min: 0,
     max: 100000, // 10億円
   },
+  // 外貨建て比率（%）
+  foreignRatio: {
+    min: 0,
+    max: 100,
+  },
 } as const
 
 export type ConstraintKey = keyof typeof VALIDATION_CONSTRAINTS

@@ -10,6 +10,7 @@ import {
   determineNextRegime,
   adjustRecoveryTargetForCashFlow,
   getStockReturn,
+  getEffectiveStockReturn,
   type RegimeState,
 } from './regime'
 import {
@@ -67,8 +68,13 @@ export function runSingleTrial(params: SimulationParams): TrialResult {
     const bondGain = balances.bonds * (regimeSettings.bondReturn / 100)
     balances.bonds += bondGain
 
-    // 株式のリターンを計算
-    const stockReturn = getStockReturn(regimeState.current, regimeSettings)
+    // 株式のリターンを計算（外貨建て比率を考慮）
+    const baseStockReturn = getStockReturn(regimeState.current, regimeSettings)
+    const stockReturn = getEffectiveStockReturn(
+      regimeState.current,
+      baseStockReturn,
+      initialAssets.foreignRatio
+    )
     const stockGain = balances.stocks * stockReturn
 
     // 株式リターンがプラスで国債が上限未達の場合、国債に優先的に積立

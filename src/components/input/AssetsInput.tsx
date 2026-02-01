@@ -19,8 +19,7 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
     onChange({ ...assets, [field]: numValue })
   }
 
-  const handleAssetBlur = (field: keyof Assets, isLimit: boolean = false) => {
-    const constraint = isLimit ? 'assetLimit' : 'assets'
+  const handleAssetBlur = (field: keyof Assets, constraint: 'assets' | 'assetLimit' | 'foreignRatio' = 'assets') => {
     const currentValue = assets[field]
     const clampedValue = clampValue(currentValue, constraint)
     if (currentValue !== clampedValue) {
@@ -34,6 +33,7 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
 
   const { min: assetMin, max: assetMax } = VALIDATION_CONSTRAINTS.assets
   const { min: limitMin, max: limitMax } = VALIDATION_CONSTRAINTS.assetLimit
+  const { min: foreignMin, max: foreignMax } = VALIDATION_CONSTRAINTS.foreignRatio
 
   return (
     <Card className="h-full">
@@ -58,9 +58,23 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
               type="number"
               min={assetMin}
               max={assetMax}
-              value={assets.stocks}
+              value={assets.stocks || ''}
               onChange={(e) => handleAssetChange('stocks', e.target.value)}
               onBlur={() => handleAssetBlur('stocks')}
+              placeholder="0"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="foreignRatio">うち外貨建て（%）</Label>
+            <Input
+              id="foreignRatio"
+              type="number"
+              min={foreignMin}
+              max={foreignMax}
+              step={5}
+              value={assets.foreignRatio || ''}
+              onChange={(e) => handleAssetChange('foreignRatio', e.target.value)}
+              onBlur={() => handleAssetBlur('foreignRatio', 'foreignRatio')}
               placeholder="0"
             />
           </div>
@@ -75,7 +89,7 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
               type="number"
               min={assetMin}
               max={assetMax}
-              value={assets.bonds}
+              value={assets.bonds || ''}
               onChange={(e) => handleAssetChange('bonds', e.target.value)}
               onBlur={() => handleAssetBlur('bonds')}
               placeholder="0"
@@ -88,9 +102,9 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
               type="number"
               min={limitMin}
               max={limitMax}
-              value={assets.bondsLimit}
+              value={assets.bondsLimit || ''}
               onChange={(e) => handleAssetChange('bondsLimit', e.target.value)}
-              onBlur={() => handleAssetBlur('bondsLimit', true)}
+              onBlur={() => handleAssetBlur('bondsLimit', 'assetLimit')}
               placeholder="1000"
             />
           </div>
@@ -105,7 +119,7 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
               type="number"
               min={assetMin}
               max={assetMax}
-              value={assets.cash}
+              value={assets.cash || ''}
               onChange={(e) => handleAssetChange('cash', e.target.value)}
               onBlur={() => handleAssetBlur('cash')}
               placeholder="0"
@@ -118,9 +132,9 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
               type="number"
               min={limitMin}
               max={limitMax}
-              value={assets.cashLimit}
+              value={assets.cashLimit || ''}
               onChange={(e) => handleAssetChange('cashLimit', e.target.value)}
-              onBlur={() => handleAssetBlur('cashLimit', true)}
+              onBlur={() => handleAssetBlur('cashLimit', 'assetLimit')}
               placeholder="500"
             />
           </div>
