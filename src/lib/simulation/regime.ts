@@ -1,5 +1,24 @@
-import type { Regime, RegimeSettings } from '@/types'
+import type { BootstrapIndex, Regime, RegimeSettings } from '@/types'
 import { sp500ReturnsByRegime, sp500HistoricalCrashProbability } from '@/data/sp500-historical'
+import { msciAcwiReturnsByRegime, msciAcwiHistoricalCrashProbability } from '@/data/msci-acwi-historical'
+
+// ブートストラップ用のデータソース
+const bootstrapDataSources = {
+  sp500: {
+    returnsByRegime: sp500ReturnsByRegime,
+    crashProbability: sp500HistoricalCrashProbability,
+  },
+  acwi: {
+    returnsByRegime: msciAcwiReturnsByRegime,
+    crashProbability: msciAcwiHistoricalCrashProbability,
+  },
+} as const
+
+function getBootstrapData(index: BootstrapIndex | undefined) {
+  if (!index || index === 'none') return null
+  if (!(index in bootstrapDataSources)) return null
+  return bootstrapDataSources[index as keyof typeof bootstrapDataSources]
+}
 
 export interface RegimeState {
   current: Regime
@@ -114,8 +133,9 @@ export function determineNextRegime(
   currentStocksBalance: number
 ): RegimeState {
   // ブートストラップモードでは過去実績の暴落確率を使用
-  const crashProbability = settings.useBootstrap
-    ? sp500HistoricalCrashProbability
+  const bootstrapData = getBootstrapData(settings.bootstrapIndex)
+  const crashProbability = bootstrapData
+    ? bootstrapData.crashProbability
     : settings.crashProbability
 
   switch (state.current) {
@@ -201,9 +221,10 @@ const STOCK_RETURN_MIN = -0.40
 export function getStockReturn(regime: Regime, settings: RegimeSettings): number {
   let rawReturn: number
 
-  if (settings.useBootstrap) {
-    // ブートストラップ: S&P 500過去データからランダム選択
-    const returns = sp500ReturnsByRegime[regime]
+  const bootstrapData = getBootstrapData(settings.bootstrapIndex)
+  if (bootstrapData) {
+    // ブートストラップ: 過去データからランダム選択
+    const returns = bootstrapData.returnsByRegime[regime]
     const randomIndex = Math.floor(Math.random() * returns.length)
     rawReturn = returns[randomIndex] / 100
   } else {

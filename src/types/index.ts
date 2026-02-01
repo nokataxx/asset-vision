@@ -26,6 +26,9 @@ export interface AnnualPlan {
   extraExpense: number // 臨時支出・支出②（万円）
 }
 
+// ブートストラップで使用するインデックス
+export type BootstrapIndex = 'none' | 'sp500' | 'acwi'
+
 // レジーム設定
 export interface RegimeSettings {
   normalReturn: number // 通常期利回り（%）
@@ -37,7 +40,7 @@ export interface RegimeSettings {
   crashProbability: number // 暴落発生確率（%）
   bondReturn: number // 国債リターン（%）
   withdrawalTaxRate: number // 取崩し時税率（%）- 株式・国債共通
-  useBootstrap: boolean // true: S&P 500過去データ使用, false: パラメータ指定
+  bootstrapIndex: BootstrapIndex // 'none': パラメータ指定, 'sp500': S&P 500, 'acwi': MSCI ACWI
 }
 
 // 資産タイプ
@@ -138,12 +141,12 @@ export const DEFAULT_REGIME_SETTINGS: RegimeSettings = {
   normalStdDev: 12,       // 実測値10.86%（やや保守的）
   crashReturn: -24,       // MSCI ACWI 暴落期実測値-24.02%
   crashStdDev: 12,        // 実測値10.55%（やや保守的）
-  recoveryReturn: 22,     // MSCI ACWI 戻り期実測値22.71%（やや保守的）
+  recoveryReturn: 17,     // MSCI ACWI 戻り期実測値17.30%
   recoveryStdDev: 12,     // 実測値8.70%（やや保守的）
-  crashProbability: 10,   // 長期的な暴落発生確率
+  crashProbability: 12,   // S&P 500長期実績に基づく暴落発生確率
   bondReturn: 1.2,
   withdrawalTaxRate: 10,
-  useBootstrap: false,    // デフォルトは従来のパラメータ指定モード
+  bootstrapIndex: 'none', // デフォルトは従来のパラメータ指定モード
 }
 
 // 取崩し優先順位（固定ロジック）

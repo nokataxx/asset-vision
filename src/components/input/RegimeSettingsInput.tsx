@@ -7,6 +7,23 @@ import { Button } from '@/components/ui/button'
 import { RotateCcw } from 'lucide-react'
 import { VALIDATION_CONSTRAINTS, clampValue } from '@/lib/validation'
 import { sp500RegimeStats, sp500HistoricalCrashProbability } from '@/data/sp500-historical'
+import { msciAcwiRegimeStats, msciAcwiHistoricalCrashProbability } from '@/data/msci-acwi-historical'
+
+// インデックス別の統計データ
+const indexStats = {
+  sp500: {
+    label: 'S&P500',
+    years: '1928-2025',
+    regimeStats: sp500RegimeStats,
+    crashProbability: sp500HistoricalCrashProbability,
+  },
+  acwi: {
+    label: 'オルカン',
+    years: '2001-2025',
+    regimeStats: msciAcwiRegimeStats,
+    crashProbability: msciAcwiHistoricalCrashProbability,
+  },
+} as const
 
 interface RegimeSettingsInputProps {
   settings: RegimeSettings
@@ -19,10 +36,14 @@ interface RegimeSettingsInputProps {
  */
 function calculateExpectedReturn(settings: RegimeSettings): number {
   // ブートストラップモードでは過去実績を使用
-  const normalReturn = settings.useBootstrap ? sp500RegimeStats.normal.mean : (settings.normalReturn ?? 8)
-  const crashReturn = settings.useBootstrap ? sp500RegimeStats.crash.mean : (settings.crashReturn ?? -30)
-  const recoveryReturn = settings.useBootstrap ? sp500RegimeStats.recovery.mean : (settings.recoveryReturn ?? 15)
-  const crashProbability = settings.useBootstrap ? sp500HistoricalCrashProbability : (settings.crashProbability ?? 10)
+  const idx = settings.bootstrapIndex && settings.bootstrapIndex in indexStats
+    ? settings.bootstrapIndex
+    : 'none'
+  const stats = idx !== 'none' ? indexStats[idx] : null
+  const normalReturn = stats ? stats.regimeStats.normal.mean : (settings.normalReturn ?? 8)
+  const crashReturn = stats ? stats.regimeStats.crash.mean : (settings.crashReturn ?? -30)
+  const recoveryReturn = stats ? stats.regimeStats.recovery.mean : (settings.recoveryReturn ?? 15)
+  const crashProbability = stats ? stats.crashProbability : (settings.crashProbability ?? 10)
 
   const p = crashProbability / 100 // 暴落確率（0-1）
   const crashReturnRatio = crashReturn / 100
@@ -53,11 +74,17 @@ function calculateExpectedReturn(settings: RegimeSettings): number {
 }
 
 export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputProps) {
+  // 古いデータとの互換性: bootstrapIndex が undefined や無効な値の場合は 'none' として扱う
+  const bootstrapIndex = settings.bootstrapIndex && settings.bootstrapIndex in indexStats
+    ? settings.bootstrapIndex
+    : 'none'
+  const currentStats = bootstrapIndex !== 'none' ? indexStats[bootstrapIndex] : null
+
   const handleChange = (field: keyof RegimeSettings, value: string) => {
     onChange({ ...settings, [field]: parseFloat(value) || 0 })
   }
 
-  const handleBlur = (field: Exclude<keyof RegimeSettings, 'useBootstrap'>, constraint: 'regimeReturn' | 'stdDev' | 'probability' | 'bondReturn' | 'withdrawalTaxRate') => {
+  const handleBlur = (field: Exclude<keyof RegimeSettings, 'bootstrapIndex'>, constraint: 'regimeReturn' | 'stdDev' | 'probability' | 'bondReturn' | 'withdrawalTaxRate') => {
     const clampedValue = clampValue(settings[field], constraint)
     if (settings[field] !== clampedValue) {
       onChange({ ...settings, [field]: clampedValue })
@@ -100,20 +127,29 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
       <CardContent>
         <div className="space-y-4">
           {/* モード切替トグル */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button
-              variant={!settings.useBootstrap ? 'default' : 'outline'}
+              variant={bootstrapIndex === 'none' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => onChange({ ...settings, useBootstrap: false })}
+              onClick={() => onChange({ ...settings, bootstrapIndex: 'none' })}
             >
               パラメータ指定
             </Button>
             <Button
-              variant={settings.useBootstrap ? 'default' : 'outline'}
+              variant={bootstrapIndex === 'sp500' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => onChange({ ...settings, useBootstrap: true })}
+              onClick={() => onChange({ ...settings, bootstrapIndex: 'sp500' })}
+              title="1928-2025年（98年分）"
             >
-              S&P500 過去データ
+              S&P500
+            </Button>
+            <Button
+              variant={bootstrapIndex === 'acwi' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => onChange({ ...settings, bootstrapIndex: 'acwi' })}
+              title="2001-2025年（25年分）"
+            >
+              オルカン
             </Button>
           </div>
 
@@ -125,14 +161,14 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               </Label>
               <SpinInput
                 id="normalReturn"
-                value={settings.useBootstrap ? sp500RegimeStats.normal.mean.toFixed(1) : settings.normalReturn}
+                value={currentStats ? currentStats.regimeStats.normal.mean.toFixed(1) : settings.normalReturn}
                 onChange={(value) => handleChange('normalReturn', value)}
                 onBlur={() => handleBlur('normalReturn', 'regimeReturn')}
                 step={0.5}
                 min={returnMin}
                 max={returnMax}
                 placeholder="10"
-                disabled={settings.useBootstrap}
+                disabled={!!currentStats}
               />
             </div>
 
@@ -142,14 +178,14 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               </Label>
               <SpinInput
                 id="normalStdDev"
-                value={settings.useBootstrap ? sp500RegimeStats.normal.stdDev.toFixed(1) : settings.normalStdDev}
+                value={currentStats ? currentStats.regimeStats.normal.stdDev.toFixed(1) : settings.normalStdDev}
                 onChange={(value) => handleChange('normalStdDev', value)}
                 onBlur={() => handleBlur('normalStdDev', 'stdDev')}
                 step={0.5}
                 min={stdMin}
                 max={stdMax}
                 placeholder="10"
-                disabled={settings.useBootstrap}
+                disabled={!!currentStats}
               />
             </div>
           </div>
@@ -162,14 +198,14 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               </Label>
               <SpinInput
                 id="crashReturn"
-                value={settings.useBootstrap ? sp500RegimeStats.crash.mean.toFixed(1) : settings.crashReturn}
+                value={currentStats ? currentStats.regimeStats.crash.mean.toFixed(1) : settings.crashReturn}
                 onChange={(value) => handleChange('crashReturn', value)}
                 onBlur={() => handleBlur('crashReturn', 'regimeReturn')}
                 step={0.5}
                 min={returnMin}
                 max={returnMax}
                 placeholder="-22"
-                disabled={settings.useBootstrap}
+                disabled={!!currentStats}
               />
             </div>
 
@@ -179,14 +215,14 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               </Label>
               <SpinInput
                 id="crashStdDev"
-                value={settings.useBootstrap ? sp500RegimeStats.crash.stdDev.toFixed(1) : settings.crashStdDev}
+                value={currentStats ? currentStats.regimeStats.crash.stdDev.toFixed(1) : settings.crashStdDev}
                 onChange={(value) => handleChange('crashStdDev', value)}
                 onBlur={() => handleBlur('crashStdDev', 'stdDev')}
                 step={0.5}
                 min={stdMin}
                 max={stdMax}
                 placeholder="28"
-                disabled={settings.useBootstrap}
+                disabled={!!currentStats}
               />
             </div>
 
@@ -196,14 +232,14 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               </Label>
               <SpinInput
                 id="crashProbability"
-                value={settings.useBootstrap ? sp500HistoricalCrashProbability.toFixed(1) : settings.crashProbability}
+                value={currentStats ? currentStats.crashProbability.toFixed(1) : settings.crashProbability}
                 onChange={(value) => handleChange('crashProbability', value)}
                 onBlur={() => handleBlur('crashProbability', 'probability')}
                 step={0.5}
                 min={probMin}
                 max={probMax}
                 placeholder="13"
-                disabled={settings.useBootstrap}
+                disabled={!!currentStats}
               />
             </div>
           </div>
@@ -216,14 +252,14 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               </Label>
               <SpinInput
                 id="recoveryReturn"
-                value={settings.useBootstrap ? sp500RegimeStats.recovery.mean.toFixed(1) : settings.recoveryReturn}
+                value={currentStats ? currentStats.regimeStats.recovery.mean.toFixed(1) : settings.recoveryReturn}
                 onChange={(value) => handleChange('recoveryReturn', value)}
                 onBlur={() => handleBlur('recoveryReturn', 'regimeReturn')}
                 step={0.5}
                 min={returnMin}
                 max={returnMax}
                 placeholder="18"
-                disabled={settings.useBootstrap}
+                disabled={!!currentStats}
               />
             </div>
 
@@ -233,14 +269,14 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               </Label>
               <SpinInput
                 id="recoveryStdDev"
-                value={settings.useBootstrap ? sp500RegimeStats.recovery.stdDev.toFixed(1) : settings.recoveryStdDev}
+                value={currentStats ? currentStats.regimeStats.recovery.stdDev.toFixed(1) : settings.recoveryStdDev}
                 onChange={(value) => handleChange('recoveryStdDev', value)}
                 onBlur={() => handleBlur('recoveryStdDev', 'stdDev')}
                 step={0.5}
                 min={stdMin}
                 max={stdMax}
                 placeholder="20"
-                disabled={settings.useBootstrap}
+                disabled={!!currentStats}
               />
             </div>
           </div>
