@@ -135,7 +135,7 @@ export const sp500HistoricalReturns: HistoricalReturn[] = [
   { year: 2022, return: -18.11, regime: 'crash' },
   { year: 2023, return: 26.29, regime: 'recovery' },
   { year: 2024, return: 24.88, regime: 'normal' },
-  { year: 2024, return: 17.78, regime: 'normal' },
+  { year: 2025, return: 17.78, regime: 'normal' },
 ]
 
 // Pre-computed returns by regime for efficient bootstrap sampling

@@ -131,18 +131,19 @@ export interface AppState {
   withdrawalPriority: WithdrawalPriority
 }
 
-// デフォルト値
+// デフォルト値（MSCI ACWIベース）
+// 根拠: docs/regime-settings-validation.md 参照
 export const DEFAULT_REGIME_SETTINGS: RegimeSettings = {
-  normalReturn: 10,
-  normalStdDev: 10,
-  crashReturn: -22,
-  crashStdDev: 28,
-  recoveryReturn: 18,
-  recoveryStdDev: 20,
-  crashProbability: 13,
+  normalReturn: 12,       // MSCI ACWI 通常期実測値12.65%（やや保守的）
+  normalStdDev: 12,       // 実測値10.86%（やや保守的）
+  crashReturn: -24,       // MSCI ACWI 暴落期実測値-24.02%
+  crashStdDev: 12,        // 実測値10.55%（やや保守的）
+  recoveryReturn: 22,     // MSCI ACWI 戻り期実測値22.71%（やや保守的）
+  recoveryStdDev: 12,     // 実測値8.70%（やや保守的）
+  crashProbability: 10,   // 長期的な暴落発生確率
   bondReturn: 1.2,
   withdrawalTaxRate: 10,
-  useBootstrap: false, // デフォルトは従来のパラメータ指定モード
+  useBootstrap: false,    // デフォルトは従来のパラメータ指定モード
 }
 
 // 取崩し優先順位（固定ロジック）

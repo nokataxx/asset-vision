@@ -113,7 +113,7 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               size="sm"
               onClick={() => onChange({ ...settings, useBootstrap: true })}
             >
-              過去データ（S&P 500）
+              S&P500 過去データ
             </Button>
           </div>
 
@@ -165,7 +165,7 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 value={settings.useBootstrap ? sp500RegimeStats.crash.mean.toFixed(1) : settings.crashReturn}
                 onChange={(value) => handleChange('crashReturn', value)}
                 onBlur={() => handleBlur('crashReturn', 'regimeReturn')}
-                step={1}
+                step={0.5}
                 min={returnMin}
                 max={returnMax}
                 placeholder="-22"
@@ -199,7 +199,7 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 value={settings.useBootstrap ? sp500HistoricalCrashProbability.toFixed(1) : settings.crashProbability}
                 onChange={(value) => handleChange('crashProbability', value)}
                 onBlur={() => handleBlur('crashProbability', 'probability')}
-                step={1}
+                step={0.5}
                 min={probMin}
                 max={probMax}
                 placeholder="13"
@@ -219,7 +219,7 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 value={settings.useBootstrap ? sp500RegimeStats.recovery.mean.toFixed(1) : settings.recoveryReturn}
                 onChange={(value) => handleChange('recoveryReturn', value)}
                 onBlur={() => handleBlur('recoveryReturn', 'regimeReturn')}
-                step={1}
+                step={0.5}
                 min={returnMin}
                 max={returnMax}
                 placeholder="18"
@@ -256,7 +256,7 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 value={settings.bondReturn}
                 onChange={(value) => handleChange('bondReturn', value)}
                 onBlur={() => handleBlur('bondReturn', 'bondReturn')}
-                step={0.1}
+                step={0.5}
                 min={bondMin}
                 max={bondMax}
                 placeholder="1.2"
@@ -272,7 +272,7 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 value={settings.withdrawalTaxRate}
                 onChange={(value) => handleChange('withdrawalTaxRate', value)}
                 onBlur={() => handleBlur('withdrawalTaxRate', 'withdrawalTaxRate')}
-                step={1}
+                step={0.5}
                 min={taxMin}
                 max={taxMax}
                 placeholder="10"
