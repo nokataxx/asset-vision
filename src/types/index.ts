@@ -36,6 +36,7 @@ export interface RegimeSettings {
   crashProbability: number // 暴落発生確率（%）
   bondReturn: number // 国債リターン（%）
   withdrawalTaxRate: number // 取崩し時税率（%）- 株式・国債共通
+  useBootstrap: boolean // true: S&P 500過去データ使用, false: パラメータ指定
 }
 
 // 資産タイプ
@@ -140,6 +141,7 @@ export const DEFAULT_REGIME_SETTINGS: RegimeSettings = {
   crashProbability: 13,
   bondReturn: 1.2,
   withdrawalTaxRate: 10,
+  useBootstrap: false, // デフォルトは従来のパラメータ指定モード
 }
 
 // 取崩し優先順位（固定ロジック）

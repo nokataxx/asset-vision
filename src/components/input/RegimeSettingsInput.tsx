@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { RotateCcw } from 'lucide-react'
 import { VALIDATION_CONSTRAINTS, clampValue } from '@/lib/validation'
+import { sp500RegimeStats, sp500HistoricalCrashProbability } from '@/data/sp500-historical'
 
 interface RegimeSettingsInputProps {
   settings: RegimeSettings
@@ -17,17 +18,23 @@ interface RegimeSettingsInputProps {
  * 暴落からの回復に必要な年数を計算し、定常分布から期待値を算出
  */
 function calculateExpectedReturn(settings: RegimeSettings): number {
-  const p = (settings.crashProbability ?? 10) / 100 // 暴落確率（0-1）
-  const crashReturn = (settings.crashReturn ?? -30) / 100
-  const recoveryReturn = (settings.recoveryReturn ?? 15) / 100
+  // ブートストラップモードでは過去実績を使用
+  const normalReturn = settings.useBootstrap ? sp500RegimeStats.normal.mean : (settings.normalReturn ?? 8)
+  const crashReturn = settings.useBootstrap ? sp500RegimeStats.crash.mean : (settings.crashReturn ?? -30)
+  const recoveryReturn = settings.useBootstrap ? sp500RegimeStats.recovery.mean : (settings.recoveryReturn ?? 15)
+  const crashProbability = settings.useBootstrap ? sp500HistoricalCrashProbability : (settings.crashProbability ?? 10)
+
+  const p = crashProbability / 100 // 暴落確率（0-1）
+  const crashReturnRatio = crashReturn / 100
+  const recoveryReturnRatio = recoveryReturn / 100
 
   // 暴落からの回復に必要な平均年数を推定
   // 暴落後の残高比率 = 1 + crashReturn (例: 0.7 for -30%)
   // 回復に必要な年数 = log(1 / 残高比率) / log(1 + recoveryReturn)
-  const postCrashRatio = 1 + crashReturn
+  const postCrashRatio = 1 + crashReturnRatio
   let estimatedRecoveryYears = 2 // デフォルト
-  if (postCrashRatio > 0 && postCrashRatio < 1 && recoveryReturn > 0) {
-    estimatedRecoveryYears = Math.log(1 / postCrashRatio) / Math.log(1 + recoveryReturn)
+  if (postCrashRatio > 0 && postCrashRatio < 1 && recoveryReturnRatio > 0) {
+    estimatedRecoveryYears = Math.log(1 / postCrashRatio) / Math.log(1 + recoveryReturnRatio)
   }
 
   // 定常確率の計算（近似）
@@ -39,9 +46,9 @@ function calculateExpectedReturn(settings: RegimeSettings): number {
 
   // 期待リターン
   return (
-    piNormal * (settings.normalReturn ?? 8) +
-    piCrash * (settings.crashReturn ?? -30) +
-    piRecovery * (settings.recoveryReturn ?? 15)
+    piNormal * normalReturn +
+    piCrash * crashReturn +
+    piRecovery * recoveryReturn
   )
 }
 
@@ -50,7 +57,7 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
     onChange({ ...settings, [field]: parseFloat(value) || 0 })
   }
 
-  const handleBlur = (field: keyof RegimeSettings, constraint: 'regimeReturn' | 'stdDev' | 'probability' | 'bondReturn' | 'withdrawalTaxRate') => {
+  const handleBlur = (field: Exclude<keyof RegimeSettings, 'useBootstrap'>, constraint: 'regimeReturn' | 'stdDev' | 'probability' | 'bondReturn' | 'withdrawalTaxRate') => {
     const clampedValue = clampValue(settings[field], constraint)
     if (settings[field] !== clampedValue) {
       onChange({ ...settings, [field]: clampedValue })
@@ -92,6 +99,24 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
+          {/* モード切替トグル */}
+          <div className="flex gap-2">
+            <Button
+              variant={!settings.useBootstrap ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => onChange({ ...settings, useBootstrap: false })}
+            >
+              パラメータ指定
+            </Button>
+            <Button
+              variant={settings.useBootstrap ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => onChange({ ...settings, useBootstrap: true })}
+            >
+              過去データ（S&P 500）
+            </Button>
+          </div>
+
           {/* 通常期: 利回り、標準偏差 */}
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
@@ -100,13 +125,14 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               </Label>
               <SpinInput
                 id="normalReturn"
-                value={settings.normalReturn}
+                value={settings.useBootstrap ? sp500RegimeStats.normal.mean.toFixed(1) : settings.normalReturn}
                 onChange={(value) => handleChange('normalReturn', value)}
                 onBlur={() => handleBlur('normalReturn', 'regimeReturn')}
                 step={0.5}
                 min={returnMin}
                 max={returnMax}
                 placeholder="10"
+                disabled={settings.useBootstrap}
               />
             </div>
 
@@ -116,13 +142,14 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               </Label>
               <SpinInput
                 id="normalStdDev"
-                value={settings.normalStdDev}
+                value={settings.useBootstrap ? sp500RegimeStats.normal.stdDev.toFixed(1) : settings.normalStdDev}
                 onChange={(value) => handleChange('normalStdDev', value)}
                 onBlur={() => handleBlur('normalStdDev', 'stdDev')}
                 step={0.5}
                 min={stdMin}
                 max={stdMax}
                 placeholder="10"
+                disabled={settings.useBootstrap}
               />
             </div>
           </div>
@@ -135,13 +162,14 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               </Label>
               <SpinInput
                 id="crashReturn"
-                value={settings.crashReturn}
+                value={settings.useBootstrap ? sp500RegimeStats.crash.mean.toFixed(1) : settings.crashReturn}
                 onChange={(value) => handleChange('crashReturn', value)}
                 onBlur={() => handleBlur('crashReturn', 'regimeReturn')}
                 step={1}
                 min={returnMin}
                 max={returnMax}
                 placeholder="-22"
+                disabled={settings.useBootstrap}
               />
             </div>
 
@@ -151,13 +179,14 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               </Label>
               <SpinInput
                 id="crashStdDev"
-                value={settings.crashStdDev}
+                value={settings.useBootstrap ? sp500RegimeStats.crash.stdDev.toFixed(1) : settings.crashStdDev}
                 onChange={(value) => handleChange('crashStdDev', value)}
                 onBlur={() => handleBlur('crashStdDev', 'stdDev')}
                 step={0.5}
                 min={stdMin}
                 max={stdMax}
                 placeholder="28"
+                disabled={settings.useBootstrap}
               />
             </div>
 
@@ -167,13 +196,14 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               </Label>
               <SpinInput
                 id="crashProbability"
-                value={settings.crashProbability}
+                value={settings.useBootstrap ? sp500HistoricalCrashProbability.toFixed(1) : settings.crashProbability}
                 onChange={(value) => handleChange('crashProbability', value)}
                 onBlur={() => handleBlur('crashProbability', 'probability')}
                 step={1}
                 min={probMin}
                 max={probMax}
                 placeholder="13"
+                disabled={settings.useBootstrap}
               />
             </div>
           </div>
@@ -186,13 +216,14 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               </Label>
               <SpinInput
                 id="recoveryReturn"
-                value={settings.recoveryReturn}
+                value={settings.useBootstrap ? sp500RegimeStats.recovery.mean.toFixed(1) : settings.recoveryReturn}
                 onChange={(value) => handleChange('recoveryReturn', value)}
                 onBlur={() => handleBlur('recoveryReturn', 'regimeReturn')}
                 step={1}
                 min={returnMin}
                 max={returnMax}
                 placeholder="18"
+                disabled={settings.useBootstrap}
               />
             </div>
 
@@ -202,18 +233,19 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
               </Label>
               <SpinInput
                 id="recoveryStdDev"
-                value={settings.recoveryStdDev}
+                value={settings.useBootstrap ? sp500RegimeStats.recovery.stdDev.toFixed(1) : settings.recoveryStdDev}
                 onChange={(value) => handleChange('recoveryStdDev', value)}
                 onBlur={() => handleBlur('recoveryStdDev', 'stdDev')}
                 step={0.5}
                 min={stdMin}
                 max={stdMax}
                 placeholder="20"
+                disabled={settings.useBootstrap}
               />
             </div>
           </div>
 
-          {/* 国債利回り・税率 */}
+          {/* 国債利回り・税率（両モードで表示） */}
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
               <Label htmlFor="bondReturn" className="text-sm">

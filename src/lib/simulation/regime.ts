@@ -1,4 +1,5 @@
 import type { Regime, RegimeSettings } from '@/types'
+import { sp500ReturnsByRegime, sp500HistoricalCrashProbability } from '@/data/sp500-historical'
 
 export interface RegimeState {
   current: Regime
@@ -112,10 +113,15 @@ export function determineNextRegime(
   settings: RegimeSettings,
   currentStocksBalance: number
 ): RegimeState {
+  // ブートストラップモードでは過去実績の暴落確率を使用
+  const crashProbability = settings.useBootstrap
+    ? sp500HistoricalCrashProbability
+    : settings.crashProbability
+
   switch (state.current) {
     case 'normal':
       // 通常期 → 暴落期（確率で遷移）
-      if (Math.random() * 100 < settings.crashProbability) {
+      if (Math.random() * 100 < crashProbability) {
         return {
           current: 'crash',
           precrashStocksBalance: currentStocksBalance, // 暴落前の残高を記録
@@ -132,7 +138,7 @@ export function determineNextRegime(
 
     case 'recovery':
       // 戻り期中も暴落が発生する可能性あり
-      if (Math.random() * 100 < settings.crashProbability) {
+      if (Math.random() * 100 < crashProbability) {
         return {
           current: 'crash',
           precrashStocksBalance: currentStocksBalance, // 新たな暴落前の残高を記録
@@ -194,18 +200,27 @@ const STOCK_RETURN_MIN = -0.40
  */
 export function getStockReturn(regime: Regime, settings: RegimeSettings): number {
   let rawReturn: number
-  switch (regime) {
-    case 'normal':
-      rawReturn = randomT(settings.normalReturn, settings.normalStdDev ?? 10, STOCK_RETURN_DF) / 100
-      break
-    case 'crash':
-      rawReturn = randomT(settings.crashReturn, settings.crashStdDev ?? 15, STOCK_RETURN_DF) / 100
-      break
-    case 'recovery':
-      rawReturn = randomT(settings.recoveryReturn, settings.recoveryStdDev ?? 12, STOCK_RETURN_DF) / 100
-      break
-    default:
-      return 0
+
+  if (settings.useBootstrap) {
+    // ブートストラップ: S&P 500過去データからランダム選択
+    const returns = sp500ReturnsByRegime[regime]
+    const randomIndex = Math.floor(Math.random() * returns.length)
+    rawReturn = returns[randomIndex] / 100
+  } else {
+    // 従来: t分布から生成
+    switch (regime) {
+      case 'normal':
+        rawReturn = randomT(settings.normalReturn, settings.normalStdDev ?? 10, STOCK_RETURN_DF) / 100
+        break
+      case 'crash':
+        rawReturn = randomT(settings.crashReturn, settings.crashStdDev ?? 15, STOCK_RETURN_DF) / 100
+        break
+      case 'recovery':
+        rawReturn = randomT(settings.recoveryReturn, settings.recoveryStdDev ?? 12, STOCK_RETURN_DF) / 100
+        break
+      default:
+        return 0
+    }
   }
   // 上限・下限でクランプ
   return Math.max(STOCK_RETURN_MIN, Math.min(STOCK_RETURN_MAX, rawReturn))

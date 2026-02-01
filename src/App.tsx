@@ -58,27 +58,10 @@ function App() {
 
   // データ読み込み時のコールバック
   const handleDataLoad = useCallback((data: UserSimulationData) => {
-    // 古いデータ形式（stocks が配列）から新しい形式（数値）への変換
-    let migratedAssets = data.assets
-    if (Array.isArray(data.assets.stocks)) {
-      const stocksArray = data.assets.stocks as Array<{ amount: number }>
-      migratedAssets = {
-        ...data.assets,
-        stocks: stocksArray.reduce((sum, s) => sum + (s.amount || 0), 0),
-      }
-    }
-    setAssets(migratedAssets)
+    setAssets(data.assets)
     setIncomeExpensePlan(data.incomeExpensePlan)
     setAnnualPlans(data.annualPlans)
-
-    // 古いデータ形式からの移行（recoveryYears関連のプロパティを削除）
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { recoveryYears, recoveryYearsMin, recoveryYearsMax, ...cleanSettings } = data.regimeSettings as RegimeSettings & {
-      recoveryYears?: number
-      recoveryYearsMin?: number
-      recoveryYearsMax?: number
-    }
-    setRegimeSettings(cleanSettings as RegimeSettings)
+    setRegimeSettings(data.regimeSettings)
   }, [])
 
   // データ永続化フック
