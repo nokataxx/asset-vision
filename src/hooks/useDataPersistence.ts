@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/hooks/useAuth'
+import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import {
   loadUserData,
   saveUserData,
@@ -16,6 +17,8 @@ interface UseDataPersistenceOptions {
   onLoad?: (data: UserSimulationData) => void
   /** Callback for save errors */
   onSaveError?: (error: Error) => void
+  /** Callback for load errors */
+  onLoadError?: (error: Error) => void
 }
 
 /**
@@ -23,13 +26,15 @@ interface UseDataPersistenceOptions {
  * - Automatically switches between localStorage and Supabase based on auth state
  * - Auto-saves with debouncing
  * - Migrates local data to database on login
+ * - Falls back to localStorage when offline
  */
 export function useDataPersistence(
   data: UserSimulationData,
   options: UseDataPersistenceOptions = {}
 ) {
   const { user, loading: authLoading } = useAuth()
-  const { debounceMs = 2000, onLoad, onSaveError } = options
+  const isOnline = useOnlineStatus()
+  const { debounceMs = 2000, onLoad, onSaveError, onLoadError } = options
 
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isInitializedRef = useRef(false)
@@ -43,13 +48,13 @@ export function useDataPersistence(
       try {
         let loadedData: UserSimulationData | null = null
 
-        if (user) {
-          // User is logged in - try to migrate local data first
+        if (user && isOnline) {
+          // User is logged in and online - try to migrate local data first
           await migrateLocalDataToDatabase(user.id)
           // Then load from database
           loadedData = await loadUserData(user.id)
         } else {
-          // Not logged in - load from localStorage
+          // Not logged in or offline - load from localStorage
           loadedData = loadLocalData()
         }
 
@@ -60,13 +65,25 @@ export function useDataPersistence(
         lastSavedDataRef.current = JSON.stringify(loadedData || data)
       } catch (error) {
         console.error('Error loading data:', error)
+        if (onLoadError && error instanceof Error) {
+          onLoadError(error)
+        }
+        // Fall back to local storage on error
+        try {
+          const localData = loadLocalData()
+          if (localData && onLoad) {
+            onLoad(localData)
+          }
+        } catch {
+          // Ignore secondary errors
+        }
         isInitializedRef.current = true
       }
     }
 
     loadData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, authLoading])
+  }, [user?.id, authLoading, isOnline])
 
   // Debounced save function
   const debouncedSave = useCallback(
@@ -85,21 +102,32 @@ export function useDataPersistence(
 
       saveTimeoutRef.current = setTimeout(async () => {
         try {
-          if (user) {
+          if (user && isOnline) {
+            // User is logged in and online - save to cloud
             await saveUserData(user.id, dataToSave)
           } else {
+            // Not logged in or offline - save to localStorage
             saveLocalData(dataToSave)
           }
           lastSavedDataRef.current = dataString
         } catch (error) {
           console.error('Error saving data:', error)
+          // On cloud save error, fallback to localStorage
+          if (user && isOnline) {
+            try {
+              saveLocalData(dataToSave)
+              lastSavedDataRef.current = dataString
+            } catch {
+              // Ignore secondary errors
+            }
+          }
           if (onSaveError && error instanceof Error) {
             onSaveError(error)
           }
         }
       }, debounceMs)
     },
-    [user, debounceMs, onSaveError]
+    [user, isOnline, debounceMs, onSaveError]
   )
 
   // Auto-save when data changes
@@ -124,7 +152,7 @@ export function useDataPersistence(
     }
 
     try {
-      if (user) {
+      if (user && isOnline) {
         await saveUserData(user.id, data)
       } else {
         saveLocalData(data)
@@ -132,16 +160,26 @@ export function useDataPersistence(
       lastSavedDataRef.current = JSON.stringify(data)
     } catch (error) {
       console.error('Error saving data:', error)
+      // On cloud save error, fallback to localStorage
+      if (user && isOnline) {
+        try {
+          saveLocalData(data)
+          lastSavedDataRef.current = JSON.stringify(data)
+        } catch {
+          // Ignore secondary errors
+        }
+      }
       if (onSaveError && error instanceof Error) {
         onSaveError(error)
       }
       throw error
     }
-  }, [user, data, onSaveError])
+  }, [user, isOnline, data, onSaveError])
 
   return {
     saveNow,
     isAuthenticated: !!user,
+    isOnline,
     isInitialized: isInitializedRef.current,
   }
 }

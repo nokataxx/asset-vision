@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from 'react'
+import { toast } from 'sonner'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { AssetsInput } from '@/components/input/AssetsInput'
 import { IncomeExpenseSettings } from '@/components/input/IncomeExpenseSettings'
@@ -26,7 +27,7 @@ import {
   DEFAULT_INCOME_EXPENSE_PLAN,
   DEFAULT_REGIME_SETTINGS,
 } from '@/types'
-import { Play, Loader2, Cloud, HardDrive } from 'lucide-react'
+import { Play, Loader2, Cloud, HardDrive, WifiOff } from 'lucide-react'
 
 function App() {
   // 入力状態
@@ -64,9 +65,24 @@ function App() {
     setRegimeSettings(data.regimeSettings)
   }, [])
 
+  // エラーハンドラ
+  const handleSaveError = useCallback(() => {
+    toast.error('保存エラー', {
+      description: 'データの保存に失敗しました。ローカルに保存されます。',
+    })
+  }, [])
+
+  const handleLoadError = useCallback(() => {
+    toast.error('読み込みエラー', {
+      description: 'クラウドからのデータ読み込みに失敗しました。ローカルデータを使用します。',
+    })
+  }, [])
+
   // データ永続化フック
-  const { isAuthenticated } = useDataPersistence(persistenceData, {
+  const { isAuthenticated, isOnline } = useDataPersistence(persistenceData, {
     onLoad: handleDataLoad,
+    onSaveError: handleSaveError,
+    onLoadError: handleLoadError,
     debounceMs: 2000,
   })
 
@@ -124,7 +140,12 @@ function App() {
         <>
           {/* 保存状態インジケーター */}
           <div className="flex items-center gap-2 text-xs text-muted-foreground ms-3 mb-2">
-            {isAuthenticated ? (
+            {!isOnline ? (
+              <>
+                <WifiOff className="h-3 w-3 text-amber-500" />
+                <span className="text-amber-500">オフライン - ローカルに保存中</span>
+              </>
+            ) : isAuthenticated ? (
               <>
                 <Cloud className="h-3 w-3" />
                 <span>クラウドに自動保存</span>
