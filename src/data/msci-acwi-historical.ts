@@ -99,3 +99,16 @@ export const msciAcwiRegimeStats = {
  */
 export const msciAcwiHistoricalCrashProbability =
   (msciAcwiReturnsByRegime.crash.length / msciAcwiHistoricalReturns.length) * 100
+
+/**
+ * 過去データに基づく平均回復年数
+ * 各暴落イベント（連続暴落は1イベント）の回復期間を平均
+ *
+ * 暴落イベントと回復期間:
+ * - 2001-02暴落 → 2003-05回復（3年）
+ * - 2008暴落 → 2009-12回復（4年）
+ * - 2022暴落 → 2023回復（1年）
+ *
+ * 平均: (3 + 4 + 1) / 3 = 2.67年
+ */
+export const msciAcwiHistoricalAverageRecoveryYears = 2.7

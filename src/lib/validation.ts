@@ -68,6 +68,11 @@ export const VALIDATION_CONSTRAINTS = {
     min: 0,
     max: 100,
   },
+  // 平均回復年数（年）
+  averageRecoveryYears: {
+    min: 1,
+    max: 10,
+  },
 } as const
 
 export type ConstraintKey = keyof typeof VALIDATION_CONSTRAINTS

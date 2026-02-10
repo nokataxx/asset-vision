@@ -41,6 +41,7 @@ export interface RegimeSettings {
   bondReturn: number // 国債リターン（%）
   withdrawalTaxRate: number // 取崩し時税率（%）- 株式・国債共通
   bootstrapIndex: BootstrapIndex // 'none': パラメータ指定, 'sp500': S&P 500, 'acwi': MSCI ACWI
+  averageRecoveryYears: number // 平均回復年数（年）- 戻り期から通常期への遷移確率を決定
 }
 
 // 資産タイプ
@@ -137,7 +138,7 @@ export interface AppState {
 // デフォルト値（MSCI ACWIベース）
 // 根拠: docs/regime-settings-validation.md 参照
 export const DEFAULT_REGIME_SETTINGS: RegimeSettings = {
-  normalReturn: 12,       // MSCI ACWI 通常期実測値12.65%（やや保守的）
+  normalReturn: 14,       // MSCI ACWI 通常期実測値14.0%
   normalStdDev: 12,       // 実測値10.86%（やや保守的）
   crashReturn: -24,       // MSCI ACWI 暴落期実測値-24.02%
   crashStdDev: 12,        // 実測値10.55%（やや保守的）
@@ -147,6 +148,7 @@ export const DEFAULT_REGIME_SETTINGS: RegimeSettings = {
   bondReturn: 1.2,
   withdrawalTaxRate: 10,
   bootstrapIndex: 'none', // デフォルトは従来のパラメータ指定モード
+  averageRecoveryYears: 2.5, // S&P500・MSCI ACWI過去実績の平均（約2.67年を0.5刻みで丸め）
 }
 
 // 取崩し優先順位（固定ロジック）

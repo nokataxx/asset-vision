@@ -1,16 +1,18 @@
 import type { BootstrapIndex, Regime, RegimeSettings } from '@/types'
-import { sp500ReturnsByRegime, sp500HistoricalCrashProbability } from '@/data/sp500-historical'
-import { msciAcwiReturnsByRegime, msciAcwiHistoricalCrashProbability } from '@/data/msci-acwi-historical'
+import { sp500ReturnsByRegime, sp500HistoricalCrashProbability, sp500HistoricalAverageRecoveryYears } from '@/data/sp500-historical'
+import { msciAcwiReturnsByRegime, msciAcwiHistoricalCrashProbability, msciAcwiHistoricalAverageRecoveryYears } from '@/data/msci-acwi-historical'
 
 // ブートストラップ用のデータソース
 const bootstrapDataSources = {
   sp500: {
     returnsByRegime: sp500ReturnsByRegime,
     crashProbability: sp500HistoricalCrashProbability,
+    averageRecoveryYears: sp500HistoricalAverageRecoveryYears,
   },
   acwi: {
     returnsByRegime: msciAcwiReturnsByRegime,
     crashProbability: msciAcwiHistoricalCrashProbability,
+    averageRecoveryYears: msciAcwiHistoricalAverageRecoveryYears,
   },
 } as const
 
@@ -132,11 +134,19 @@ export function determineNextRegime(
   settings: RegimeSettings,
   currentStocksBalance: number
 ): RegimeState {
-  // ブートストラップモードでは過去実績の暴落確率を使用
+  // ブートストラップモードでは過去実績の暴落確率と平均回復年数を使用
   const bootstrapData = getBootstrapData(settings.bootstrapIndex)
   const crashProbability = bootstrapData
     ? bootstrapData.crashProbability
     : settings.crashProbability
+
+  // 平均回復年数から戻り期→通常期の遷移確率を計算
+  // 遷移確率 = 1 / 平均年数 × 100（%）
+  // 例: 2.5年の場合 = 40%/年
+  const averageRecoveryYears = bootstrapData
+    ? bootstrapData.averageRecoveryYears
+    : (settings.averageRecoveryYears ?? 2.5)
+  const recoveryToNormalProbability = (1 / averageRecoveryYears) * 100
 
   switch (state.current) {
     case 'normal':
@@ -164,7 +174,14 @@ export function determineNextRegime(
           precrashStocksBalance: currentStocksBalance, // 新たな暴落前の残高を記録
         }
       }
-      // 株式残高が暴落前の水準に回復したら通常期に戻る
+      // 確率的遷移: 平均回復年数に基づいて通常期に戻る
+      if (Math.random() * 100 < recoveryToNormalProbability) {
+        return {
+          current: 'normal',
+          precrashStocksBalance: 0,
+        }
+      }
+      // フォールバック: 株式残高が暴落前の水準に回復したら通常期に戻る
       if (currentStocksBalance >= state.precrashStocksBalance) {
         return {
           current: 'normal',

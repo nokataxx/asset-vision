@@ -6,8 +6,8 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { RotateCcw } from 'lucide-react'
 import { VALIDATION_CONSTRAINTS, clampValue } from '@/lib/validation'
-import { sp500RegimeStats, sp500HistoricalCrashProbability } from '@/data/sp500-historical'
-import { msciAcwiRegimeStats, msciAcwiHistoricalCrashProbability } from '@/data/msci-acwi-historical'
+import { sp500RegimeStats, sp500HistoricalCrashProbability, sp500HistoricalAverageRecoveryYears } from '@/data/sp500-historical'
+import { msciAcwiRegimeStats, msciAcwiHistoricalCrashProbability, msciAcwiHistoricalAverageRecoveryYears } from '@/data/msci-acwi-historical'
 
 // インデックス別の統計データ
 const indexStats = {
@@ -16,12 +16,14 @@ const indexStats = {
     years: '1928-2025',
     regimeStats: sp500RegimeStats,
     crashProbability: sp500HistoricalCrashProbability,
+    averageRecoveryYears: sp500HistoricalAverageRecoveryYears,
   },
   acwi: {
     label: 'オルカン',
     years: '2001-2025',
     regimeStats: msciAcwiRegimeStats,
     crashProbability: msciAcwiHistoricalCrashProbability,
+    averageRecoveryYears: msciAcwiHistoricalAverageRecoveryYears,
   },
 } as const
 
@@ -84,7 +86,7 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
     onChange({ ...settings, [field]: parseFloat(value) || 0 })
   }
 
-  const handleBlur = (field: Exclude<keyof RegimeSettings, 'bootstrapIndex'>, constraint: 'regimeReturn' | 'stdDev' | 'probability' | 'bondReturn' | 'withdrawalTaxRate') => {
+  const handleBlur = (field: Exclude<keyof RegimeSettings, 'bootstrapIndex'>, constraint: 'regimeReturn' | 'stdDev' | 'probability' | 'bondReturn' | 'withdrawalTaxRate' | 'averageRecoveryYears') => {
     const clampedValue = clampValue(settings[field], constraint)
     if (settings[field] !== clampedValue) {
       onChange({ ...settings, [field]: clampedValue })
@@ -102,6 +104,7 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
   const { min: probMin, max: probMax } = VALIDATION_CONSTRAINTS.probability
   const { min: bondMin, max: bondMax } = VALIDATION_CONSTRAINTS.bondReturn
   const { min: taxMin, max: taxMax } = VALIDATION_CONSTRAINTS.withdrawalTaxRate
+  const { min: recoveryMin, max: recoveryMax } = VALIDATION_CONSTRAINTS.averageRecoveryYears
 
   return (
     <Card className="h-full">
@@ -244,7 +247,7 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
             </div>
           </div>
 
-          {/* 戻り期: 利回り、標準偏差 */}
+          {/* 戻り期: 利回り、標準偏差、平均回復年数 */}
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
               <Label htmlFor="recoveryReturn" className="text-sm">
@@ -276,6 +279,23 @@ export function RegimeSettingsInput({ settings, onChange }: RegimeSettingsInputP
                 min={stdMin}
                 max={stdMax}
                 placeholder="20"
+                disabled={!!currentStats}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="averageRecoveryYears" className="text-sm">
+                平均回復年数（年）
+              </Label>
+              <SpinInput
+                id="averageRecoveryYears"
+                value={currentStats ? currentStats.averageRecoveryYears : settings.averageRecoveryYears}
+                onChange={(value) => handleChange('averageRecoveryYears', value)}
+                onBlur={() => handleBlur('averageRecoveryYears', 'averageRecoveryYears')}
+                step={0.5}
+                min={recoveryMin}
+                max={recoveryMax}
+                placeholder="2.5"
                 disabled={!!currentStats}
               />
             </div>
