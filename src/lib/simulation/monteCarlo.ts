@@ -70,6 +70,10 @@ export function runSingleTrial(params: SimulationParams): TrialResult {
 
     // 株式のリターンを計算（外貨建て比率を考慮）
     const baseStockReturn = getStockReturn(regimeState.current, regimeSettings)
+    // 暴落年の実リターンを記録（暴落深さと回復期間の相関に使用）
+    if (regimeState.current === 'crash') {
+      regimeState = { ...regimeState, crashReturn: baseStockReturn }
+    }
     const stockReturn = getEffectiveStockReturn(
       regimeState.current,
       baseStockReturn,

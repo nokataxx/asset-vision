@@ -25,6 +25,8 @@ function getBootstrapData(index: BootstrapIndex | undefined) {
 export interface RegimeState {
   current: Regime
   precrashStocksBalance: number // 暴落前の株式残高（回復判定用）
+  yearsInRecovery: number // 戻り期の経過年数（二番底モデル用）
+  crashReturn: number // 暴落年の実リターン（暴落深さ相関用、小数: -0.35 = -35%）
 }
 
 /**
@@ -120,6 +122,8 @@ export function createInitialRegimeState(): RegimeState {
   return {
     current: 'normal',
     precrashStocksBalance: 0,
+    yearsInRecovery: 0,
+    crashReturn: 0,
   }
 }
 
@@ -129,6 +133,34 @@ export function createInitialRegimeState(): RegimeState {
  * @param settings レジーム設定
  * @param currentStocksBalance 現在の株式残高（戻り期の終了判定に使用）
  */
+/**
+ * 二番底（ダブルディップ）モデル: 戻り期初期ほど再暴落リスクが高い
+ * - 1年目: 基本確率の1.5倍（歴史的に最も不安定）
+ * - 2年目: 基本確率の1.15倍
+ * - 3年目以降: 基本確率のまま
+ */
+function getDoubleDipCrashProbability(
+  baseCrashProbability: number,
+  yearsInRecovery: number
+): number {
+  if (yearsInRecovery === 1) return baseCrashProbability * 1.5
+  if (yearsInRecovery === 2) return baseCrashProbability * 1.15
+  return baseCrashProbability
+}
+
+/**
+ * 暴落深さと回復期間の相関: 深い暴落ほど回復に時間がかかる
+ * averageRecoveryYears に対する乗数を返す
+ * - 軽度（> -20%）: ×0.6（回復が速い）
+ * - 中度（-20%〜-35%）: ×1.0（変更なし）
+ * - 重度（< -35%）: ×2.0（回復に2倍の年数）
+ */
+function getCrashDepthRecoveryMultiplier(crashReturn: number): number {
+  if (crashReturn > -0.20) return 0.6
+  if (crashReturn > -0.35) return 1.0
+  return 2.0
+}
+
 export function determineNextRegime(
   state: RegimeState,
   settings: RegimeSettings,
@@ -143,10 +175,9 @@ export function determineNextRegime(
   // 平均回復年数から戻り期→通常期の遷移確率を計算
   // 遷移確率 = 1 / 平均年数 × 100（%）
   // 例: 2.5年の場合 = 40%/年
-  const averageRecoveryYears = bootstrapData
+  const baseRecoveryYears = bootstrapData
     ? bootstrapData.averageRecoveryYears
     : (settings.averageRecoveryYears ?? 2.5)
-  const recoveryToNormalProbability = (1 / averageRecoveryYears) * 100
 
   switch (state.current) {
     case 'normal':
@@ -155,6 +186,8 @@ export function determineNextRegime(
         return {
           current: 'crash',
           precrashStocksBalance: currentStocksBalance, // 暴落前の残高を記録
+          yearsInRecovery: 0,
+          crashReturn: 0,
         }
       }
       return state
@@ -164,21 +197,37 @@ export function determineNextRegime(
       return {
         current: 'recovery',
         precrashStocksBalance: state.precrashStocksBalance,
+        yearsInRecovery: 1,
+        crashReturn: state.crashReturn, // monteCarlo.tsで設定された暴落リターンを引き継ぎ
       }
 
-    case 'recovery':
-      // 戻り期中も暴落が発生する可能性あり
-      if (Math.random() * 100 < crashProbability) {
+    case 'recovery': {
+      // 二番底モデル: 戻り期初期ほど再暴落リスクが高い
+      const doubleDipProbability = getDoubleDipCrashProbability(
+        crashProbability,
+        state.yearsInRecovery
+      )
+      if (Math.random() * 100 < doubleDipProbability) {
         return {
           current: 'crash',
           precrashStocksBalance: currentStocksBalance, // 新たな暴落前の残高を記録
+          yearsInRecovery: 0,
+          crashReturn: 0, // 新たな暴落リターンはmonteCarlo.tsで設定される
         }
       }
-      // 確率的遷移: 平均回復年数に基づいて通常期に戻る
+
+      // 暴落深さと回復期間の相関: 深い暴落ほど回復に時間がかかる
+      const depthMultiplier = getCrashDepthRecoveryMultiplier(state.crashReturn)
+      const adjustedRecoveryYears = baseRecoveryYears * depthMultiplier
+      const recoveryToNormalProbability = (1 / adjustedRecoveryYears) * 100
+
+      // 確率的遷移: 調整済み回復年数に基づいて通常期に戻る
       if (Math.random() * 100 < recoveryToNormalProbability) {
         return {
           current: 'normal',
           precrashStocksBalance: 0,
+          yearsInRecovery: 0,
+          crashReturn: 0,
         }
       }
       // フォールバック: 株式残高が暴落前の水準に回復したら通常期に戻る
@@ -186,10 +235,16 @@ export function determineNextRegime(
         return {
           current: 'normal',
           precrashStocksBalance: 0,
+          yearsInRecovery: 0,
+          crashReturn: 0,
         }
       }
-      // まだ回復していない場合は戻り期を継続
-      return state
+      // まだ回復していない場合は戻り期を継続（経過年数をインクリメント）
+      return {
+        ...state,
+        yearsInRecovery: state.yearsInRecovery + 1,
+      }
+    }
 
     default:
       return state
