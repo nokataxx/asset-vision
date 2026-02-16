@@ -22,7 +22,7 @@ import {
   isDepleted,
 } from './withdrawal'
 
-interface SimulationParams {
+export interface SimulationParams {
   initialAssets: Assets
   annualPlans: AnnualPlan[]
   regimeSettings: RegimeSettings

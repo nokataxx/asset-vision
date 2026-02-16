@@ -139,7 +139,7 @@ export function createInitialRegimeState(): RegimeState {
  * - 2年目: 基本確率の1.15倍
  * - 3年目以降: 基本確率のまま
  */
-function getDoubleDipCrashProbability(
+export function getDoubleDipCrashProbability(
   baseCrashProbability: number,
   yearsInRecovery: number
 ): number {
@@ -155,7 +155,7 @@ function getDoubleDipCrashProbability(
  * - 中度（-20%〜-35%）: ×1.0（変更なし）
  * - 重度（< -35%）: ×2.0（回復に2倍の年数）
  */
-function getCrashDepthRecoveryMultiplier(crashReturn: number): number {
+export function getCrashDepthRecoveryMultiplier(crashReturn: number): number {
   if (crashReturn > -0.20) return 0.6
   if (crashReturn > -0.35) return 1.0
   return 2.0
