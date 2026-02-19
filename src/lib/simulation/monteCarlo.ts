@@ -45,8 +45,8 @@ export function runSingleTrial(params: SimulationParams): TrialResult {
   let crashCount = 0
   const yearlyResults: TrialYearResult[] = []
 
-  // 前年末の総資産（初年度は初期資産）
-  let previousTotalAssets = calculateTotalAssets(balances)
+  // 年初の現金補充: 初年度は国債から優先（不足時は株式から）
+  balances = replenishCash(balances, initialAssets.cashLimit, true, regimeSettings.withdrawalTaxRate)
 
   for (const plan of annualPlans) {
     // 1. レジーム遷移の判定（年初）
@@ -99,14 +99,8 @@ export function runSingleTrial(params: SimulationParams): TrialResult {
       initialAssets.bondsLimit
     )
 
-    // 5. 現金が上限未満の場合、補填元を下落率で決定
-    const currentTotalAssets = calculateTotalAssets(balances)
-    const declineRate = previousTotalAssets > 0
-      ? ((currentTotalAssets - previousTotalAssets) / previousTotalAssets) * 100
-      : 0
-
-    // 下落率が0以下（資産減少または変化なし）なら国債から、プラス（資産増加）なら株式から補填
-    const fromBonds = declineRate <= 0
+    // 5. 年末の現金補充: 株式増減がプラスなら株式から、マイナスなら国債から
+    const fromBonds = stockGain <= 0
     balances = replenishCash(balances, initialAssets.cashLimit, fromBonds, regimeSettings.withdrawalTaxRate)
 
     // 暴落期・戻り期中は収支を考慮して回復目標を調整
@@ -135,9 +129,6 @@ export function runSingleTrial(params: SimulationParams): TrialResult {
       extraExpense: plan.extraExpense,
       isDepleted: depleted,
     })
-
-    // 次年度のために今年の総資産を記録
-    previousTotalAssets = totalAssets
   }
 
   return {
