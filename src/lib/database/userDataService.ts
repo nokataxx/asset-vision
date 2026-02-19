@@ -31,7 +31,7 @@ export interface UserSimulationData {
  */
 export async function loadUserData(userId: string): Promise<UserSimulationData | null> {
   const { data, error } = await supabase
-    .from('user_simulation_data')
+    .from('asset_simulation_data')
     .select('*')
     .eq('user_id', userId)
     .single()
@@ -62,7 +62,7 @@ export async function saveUserData(
   data: UserSimulationData
 ): Promise<void> {
   const { error } = await supabase
-    .from('user_simulation_data')
+    .from('asset_simulation_data')
     .upsert(
       {
         user_id: userId,
@@ -87,7 +87,7 @@ export async function saveUserData(
  */
 export async function deleteUserData(userId: string): Promise<void> {
   const { error } = await supabase
-    .from('user_simulation_data')
+    .from('asset_simulation_data')
     .delete()
     .eq('user_id', userId)
 
