@@ -94,11 +94,13 @@ export const msciAcwiRegimeStats = {
 } as const
 
 /**
- * 過去データに基づく暴落発生確率（%）
- * 暴落年数 / 全年数 で計算
+ * 暴落発生確率（%）
+ * ACWIはデータ期間が短く（2001-2025, 25年）、開始年がドットコムバブル崩壊と
+ * 重なるため独自計算では過大（16%）になる。
+ * S&P 500とACWIの暴落タイミングはほぼ一致するため、
+ * S&P 500の長期実績（1928-2025, 98年, 12.2%）を採用する。
  */
-export const msciAcwiHistoricalCrashProbability =
-  (msciAcwiReturnsByRegime.crash.length / msciAcwiHistoricalReturns.length) * 100
+export { sp500HistoricalCrashProbability as msciAcwiHistoricalCrashProbability } from './sp500-historical'
 
 /**
  * 過去データに基づく平均回復年数
