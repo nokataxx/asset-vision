@@ -5,7 +5,7 @@ import type { StockFund } from '@/types'
 function makeFund(amount: number, foreignRatio: number): StockFund {
   return {
     id: `test-${Math.random()}`,
-    presetId: 'custom',
+    presetId: 'all_country',
     label: 'Test',
     amount,
     foreignRatio,
