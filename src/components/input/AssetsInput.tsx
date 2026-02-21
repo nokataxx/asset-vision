@@ -116,7 +116,7 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
         {/* 株式・投資信託セクション */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label>株式・投資信託（万円）</Label>
+            <Label>株式・投資信託</Label>
           </div>
 
           {/* ファンドテーブル */}
@@ -208,7 +208,9 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
           </div>
         </div>
 
-        <hr className="border-border" />
+        <div className="pt-2">
+          <hr className="border-border" />
+        </div>
 
         {/* 国債 */}
         <div className="grid grid-cols-2 gap-2">
@@ -276,6 +278,11 @@ export function AssetsInput({ assets, onChange }: AssetsInputProps) {
             <span className="font-medium">総資産</span>
             <span className="text-lg font-bold">
               {totalAssets.toLocaleString()} 万円
+              {totalStocks > 0 && totalAssets > 0 && (
+                <span className="text-sm font-normal text-muted-foreground ml-1">
+                  ({Math.round(totalStocks * weightedForeignRatio / totalAssets)}%)
+                </span>
+              )}
             </span>
           </div>
         </div>
