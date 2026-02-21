@@ -5,13 +5,14 @@ import { DEFAULT_REGIME_SETTINGS } from '@/types'
 import type { Assets, AnnualPlan } from '@/types'
 
 const defaultAssets: Assets = {
-  stocks: 3000,
+  stockFunds: [
+    { id: 'test-1', presetId: 'domestic', label: '国内株式', amount: 3000, foreignRatio: 0 },
+  ],
   bonds: 1000,
   cash: 500,
   cashLimit: 500,
   bondsLimit: 1000,
   age: 60,
-  foreignRatio: 0,
 }
 
 function makePlans(years: number, income = 0, expense = 200): AnnualPlan[] {
@@ -40,7 +41,7 @@ describe('runSingleTrial', () => {
 
   it('初期資産0+支出ありで即枯渇', () => {
     const params: SimulationParams = {
-      initialAssets: { ...defaultAssets, stocks: 0, bonds: 0, cash: 0 },
+      initialAssets: { ...defaultAssets, stockFunds: [], bonds: 0, cash: 0 },
       annualPlans: makePlans(5, 0, 200),
       regimeSettings: DEFAULT_REGIME_SETTINGS,
     }

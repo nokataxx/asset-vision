@@ -21,6 +21,7 @@ import {
   calculateTotalAssets,
   isDepleted,
 } from './withdrawal'
+import { getTotalStocks, getWeightedForeignRatio } from './stockFundAggregation'
 
 export interface SimulationParams {
   initialAssets: Assets
@@ -34,9 +35,13 @@ export interface SimulationParams {
 export function runSingleTrial(params: SimulationParams): TrialResult {
   const { initialAssets, annualPlans, regimeSettings } = params
 
+  // stockFundsから集約
+  const totalStocks = getTotalStocks(initialAssets.stockFunds)
+  const foreignRatio = getWeightedForeignRatio(initialAssets.stockFunds)
+
   // 初期状態
   let balances: AssetBalances = {
-    stocks: initialAssets.stocks,
+    stocks: totalStocks,
     bonds: initialAssets.bonds,
     cash: initialAssets.cash,
   }
@@ -77,7 +82,7 @@ export function runSingleTrial(params: SimulationParams): TrialResult {
     const stockReturn = getEffectiveStockReturn(
       regimeState.current,
       baseStockReturn,
-      initialAssets.foreignRatio
+      foreignRatio
     )
     const stockGain = balances.stocks * stockReturn
 

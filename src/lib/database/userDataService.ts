@@ -1,10 +1,12 @@
 import { supabase } from '@/lib/supabase'
 import type {
   Assets,
+  StockFund,
   IncomeExpensePlan,
   AnnualPlan,
   RegimeSettings,
 } from '@/types'
+import { findClosestPreset } from '@/data/stock-fund-presets'
 
 // Database row type
 interface UserSimulationDataRow {
@@ -46,12 +48,12 @@ export async function loadUserData(userId: string): Promise<UserSimulationData |
   }
 
   const row = data as UserSimulationDataRow
-  return {
+  return migrateUserSimulationData({
     assets: row.assets,
     incomeExpensePlan: row.income_expense_plan,
     annualPlans: row.annual_plans,
     regimeSettings: row.regime_settings,
-  }
+  })
 }
 
 /**
@@ -98,6 +100,67 @@ export async function deleteUserData(userId: string): Promise<void> {
 }
 
 // ============================================
+// Data migration: old format (stocks + foreignRatio) -> new format (stockFunds[])
+// ============================================
+
+interface OldAssets {
+  stocks: number
+  foreignRatio: number
+  bonds: number
+  cash: number
+  cashLimit: number
+  bondsLimit: number
+  age: number
+}
+
+function generateFundId(): string {
+  return `fund-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+/** Migrate old Assets format to new stockFunds format */
+export function migrateAssets(data: Record<string, unknown>): Assets {
+  // Already new format
+  if ('stockFunds' in data && Array.isArray(data.stockFunds)) {
+    return data as unknown as Assets
+  }
+
+  // Old format: has stocks and foreignRatio fields
+  if ('stocks' in data && !('stockFunds' in data)) {
+    const old = data as unknown as OldAssets
+    const stockFunds: StockFund[] = []
+
+    if (old.stocks > 0) {
+      const preset = findClosestPreset(old.foreignRatio ?? 0)
+      stockFunds.push({
+        id: generateFundId(),
+        presetId: preset.id,
+        label: preset.label,
+        amount: old.stocks,
+        foreignRatio: old.foreignRatio ?? 0,
+      })
+    }
+
+    return {
+      stockFunds,
+      bonds: old.bonds ?? 0,
+      cash: old.cash ?? 0,
+      cashLimit: old.cashLimit ?? 500,
+      bondsLimit: old.bondsLimit ?? 1000,
+      age: old.age ?? 30,
+    }
+  }
+
+  return data as unknown as Assets
+}
+
+function migrateUserSimulationData(data: UserSimulationData): UserSimulationData {
+  return {
+    ...data,
+    assets: migrateAssets(data.assets as unknown as Record<string, unknown>),
+  }
+}
+
+// ============================================
 // LocalStorage fallback for non-logged-in users
 // ============================================
 
@@ -110,7 +173,8 @@ export function loadLocalData(): UserSimulationData | null {
   try {
     const stored = localStorage.getItem(LOCAL_STORAGE_KEY)
     if (!stored) return null
-    return JSON.parse(stored) as UserSimulationData
+    const parsed = JSON.parse(stored) as UserSimulationData
+    return migrateUserSimulationData(parsed)
   } catch (error) {
     console.error('Error loading local data:', error)
     return null

@@ -1,12 +1,36 @@
+// 株式ファンドプリセットID
+export type StockFundPresetId =
+  | 'all_country'
+  | 'developed_ex_jp'
+  | 'sp500'
+  | 'domestic'
+  | 'emerging'
+  | 'balanced'
+
+// 株式ファンド
+export interface StockFund {
+  id: string
+  presetId: StockFundPresetId
+  label: string
+  amount: number         // 金額（万円）
+  foreignRatio: number   // 外貨比率（0-100%）
+}
+
+// 株式ファンドプリセット定義
+export interface StockFundPreset {
+  id: StockFundPresetId
+  label: string
+  foreignRatio: number
+}
+
 // 資産全体
 export interface Assets {
-  stocks: number // 株式（万円）
+  stockFunds: StockFund[] // 株式ファンド一覧
   bonds: number // 国債（万円）
   cash: number // 現金（万円）
   cashLimit: number // 現金上限（万円）
   bondsLimit: number // 国債上限（万円）
   age: number // 年齢
-  foreignRatio: number // 外貨建て比率（%）
 }
 
 // 収支計画の基本設定
@@ -167,11 +191,10 @@ export const DEFAULT_INCOME_EXPENSE_PLAN: IncomeExpensePlan = {
 }
 
 export const DEFAULT_ASSETS: Assets = {
-  stocks: 0,
+  stockFunds: [],
   bonds: 0,
   cash: 0,
   cashLimit: 500,
   bondsLimit: 1000,
   age: 30,
-  foreignRatio: 0,
 }

@@ -27,6 +27,7 @@ import {
   DEFAULT_INCOME_EXPENSE_PLAN,
   DEFAULT_REGIME_SETTINGS,
 } from '@/types'
+import { getTotalStocks } from '@/lib/simulation/stockFundAggregation'
 import { Play, Loader2, Cloud, HardDrive, WifiOff } from 'lucide-react'
 
 function App() {
@@ -126,7 +127,7 @@ function App() {
         1000
       )
 
-      const initialTotalAssets = assets.stocks + assets.bonds + assets.cash
+      const initialTotalAssets = getTotalStocks(assets.stockFunds) + assets.bonds + assets.cash
       const result = aggregateSimulationResults(trialResults, annualPlans, initialTotalAssets)
       setSimulationResult(result)
     } finally {
@@ -158,13 +159,13 @@ function App() {
             )}
           </div>
 
-          {/* 1段目: 現在の資産とレジーム設定 (4:6) */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div className="md:col-span-2">
+          {/* 1段目: 現在の資産とレジーム設定 (1:1) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-1">
               <AssetsInput assets={assets} onChange={handleAssetsChange} />
             </div>
 
-            <div className="md:col-span-3">
+            <div className="md:col-span-1">
               <RegimeSettingsInput
                 settings={regimeSettings}
                 onChange={setRegimeSettings}
@@ -220,7 +221,7 @@ function App() {
           <YearlyResultTable yearlyResults={simulationResult?.yearlyResults ?? []} />
           <SampleTrialTable
             trialResults={simulationResult?.trialResults ?? []}
-            initialTotalAssets={assets.stocks + assets.bonds + assets.cash}
+            initialTotalAssets={getTotalStocks(assets.stockFunds) + assets.bonds + assets.cash}
           />
         </>
       }
